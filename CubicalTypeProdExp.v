@@ -29,10 +29,26 @@ Arguments square {C D} {i0 i1} ai {j0 j1} aj.
 Definition CT1_product (C D : CT1) : CT2 :=
   (prod_zerocells C D ; (prod_onecells C D ; prod_twocells C D) ).
    
-(* product is commutative 
-Definition commute (C D : CT1) : CT1_product C D = CT1_product D C.
+(* product is commutative, unfinished
+Definition commute `{Univalence}
+                   (C D : CT1) : CT1_product C D = CT1_product D C.
 Proof.
-  refine (path_sigma CT1 _ _ _ _).
+  pose (flip_equiv := equiv_prod_symm C.1 D.1).
+  pose (flip_equal := equiv_path_universe _ _ flip_equiv).
+  simple refine (path_sigma _ _ _ _ _).
+    - exact flip_equal.
+    - simple refine (path_sigma _ _ _ _ _).
+      + rewrite (transport_sigma _ _). simpl.
+        simple refine (path_forall _ _ _). intro x.
+        simple refine (path_forall _ _ _). intro y.
+        refine (inverse _).
+        simple refine (path_universe_uncurried _).
+        simple refine (BuildEquiv _ _ _ _).
+          * intro. induction X.
+              -- rewrite (transport_arrow _ _ _).
+                 rewrite (transport_arrow _ _ _). 
+                 rewrite (transport_path_universe_V_uncurried flip_equiv _).
+                 rewrite (transport_path_universe_V_uncurried flip_equiv _).
 *)
 
 
