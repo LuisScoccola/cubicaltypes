@@ -1,0 +1,12 @@
+*.vo
+*.v.d
+*.glob
+
+*~
+*.swp
+
+*.aux
+*.toc
+*.out
+*.log
+*.pdf
