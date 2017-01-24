@@ -41,7 +41,7 @@ Definition CT1_product (C D : CT1) : CT2 :=
 (* now we want to prove that the product is commutative *)
 Definition prod_zerocells_commute `{Univalence}
                                   (C D : CT1) :
-                                    (CT1_product C D).1 = (CT1_product D C).1 :=
+                                    prod_zerocells C D = prod_zerocells D C :=
   equiv_path_universe _ _ (equiv_prod_symm C.1 D.1).
 
 
@@ -55,32 +55,34 @@ Definition flip_involution {A B : Type} (ab : A * B) : flip (flip ab) = ab :=
   end.
 
 
-Definition prod_onecells_map_from {C D : CT1} (x y : prod_zerocells D C) :
-                                  (CT1_product D C).2.1 x y -> (CT1_product C D).2.1 (flip x) (flip y) :=
+(* this the 1-dimensional version of flip *)
+Definition prod_onecells_map_to {C D : CT1} (x y : prod_zerocells C D) :
+                                  prod_onecells C D x y -> prod_onecells D C (flip x) (flip y) :=
   fun X => match X with
              | edge_vert i0 i1 ai j => vert_edge j ai
              | vert_edge i j0 j1 aj => edge_vert aj i
            end.
 
 
-Definition prod_onecells_map_to {C D : CT1} (x y : prod_zerocells D C) :
-                                (CT1_product C D).2.1 (flip x) (flip y) -> (CT1_product D C).2.1 x y :=
+Definition prod_onecells_map_from {C D : CT1} (x y : prod_zerocells C D) :
+                                prod_onecells D C (flip x) (flip y) -> prod_onecells C D x y :=
   let (x0 , x1) := x in
-  let (y0 , y1) := y in prod_onecells_map_from (x1 , x0) (y1 , y0).
+  let (y0 , y1) := y in prod_onecells_map_to (x1 , x0) (y1 , y0).
 
 
-Definition prod_onecells_map_from_to {C D : CT1} (x y : prod_zerocells D C) :
-                                     (prod_onecells_map_to x y) o (prod_onecells_map_from x y) == idmap :=
+Definition prod_onecells_map_to_from {C D : CT1} (x y : prod_zerocells C D) :
+                                     (prod_onecells_map_from x y) o (prod_onecells_map_to x y) == idmap :=
   fun X => match X with
              | edge_vert _ _ _ _ => reflexivity _
              | vert_edge _ _ _ _ => reflexivity _
            end.
 
 
-Definition prod_onecells_map_to_from {C D : CT1} (x y : prod_zerocells D C) :
-                                     (prod_onecells_map_from x y) o (prod_onecells_map_to x y) == idmap :=
+Definition prod_onecells_map_from_to {C D : CT1} (x y : prod_zerocells C D) :
+                                     (prod_onecells_map_to x y) o (prod_onecells_map_from x y) == idmap :=
   let (x0 , x1) := x in
-  let (y0 , y1) := y in prod_onecells_map_from_to (x1 , x0) (y1 , y0).
+  let (y0 , y1) := y in prod_onecells_map_to_from (x1 , x0) (y1 , y0).
+
 
 
 Definition prod_onecells_commute `{Univalence}
@@ -99,19 +101,30 @@ Proof.
   rewrite (transport_path_universe_V_uncurried flip_equiv _).
   rewrite (transport_path_universe_V_uncurried flip_equiv _).
   simple refine (BuildEquiv _ _ _ _).
-    - exact (prod_onecells_map_to x y).
+    - exact (prod_onecells_map_from x y).
     - simple refine (isequiv_biinv _ _).
-      exact ((prod_onecells_map_from x y ; prod_onecells_map_to_from x y) ,
-             (prod_onecells_map_from x y ; prod_onecells_map_from_to x y) ).
+      exact ((prod_onecells_map_to x y ; prod_onecells_map_from_to x y) ,
+             (prod_onecells_map_to x y ; prod_onecells_map_to_from x y) ).
 Qed.
+
+
 
 
 (* product is commutative, unfinished
 
+
 Definition prod_twocells_commute `{Univalence}
              (C D : CT1) :
-             (prod_onecells_commute C D) # (CT1_product C D).2.2 = (CT1_product D C).2.2.
-
+             (prod_zerocells_commute C D) # (CT1_product C D).2 = (CT1_product D C).2.
+Proof.
+  intros.
+  simpl.
+  simple refine (path_forall _ _ _). intro x.
+  simple refine (path_forall _ _ _). intro y.
+  simple refine (path_universe_uncurried _).
+  (* todo: don't use rewrite *)
+  rewrite (transport_arrow _ _ _). 
+  rewrite transport_const.
 
 Definition commute `{Univalence}
                    (C D : CT1) : CT1_product C D = CT1_product D C.
@@ -124,7 +137,7 @@ Definition commute `{Univalence}
 *)
 Definition inclusion_top {C : CT1} {H : CT2}
                          (N : CT2_morphism (CT1_product interval_CT1 C) H) :
-                           CT1_morphism C (CT2toCT1 H).
+                           CT1_morphism C H.
 Proof.
   exists ( fun c0 => N.1 (false , c0) ).
   exact (fun c0 c1 => (fun a => N.2.1 (false , c0) (false , c1) (@vert_edge interval_CT1 C false c0 c1 a))).
@@ -135,7 +148,7 @@ Defined.
   *)
 Definition inclusion_bot {C : CT1} {H : CT2}
                          (N : CT2_morphism (CT1_product interval_CT1 C) H) :
-                           CT1_morphism C (CT2toCT1 H).
+                           CT1_morphism C H.
 Proof.
   exists ( fun c0 => N.1 (true , c0) ).
   exact (fun c0 c1 => (fun a => N.2.1 (true , c0) (true , c1) (@vert_edge interval_CT1 C true c0 c1 a))).
@@ -144,6 +157,11 @@ Defined.
 
 
 Inductive CT1_naturalt (C : CT1) (H : CT2) :
-            (CT1_morphism C (CT2toCT1 H)) -> (CT1_morphism C (CT2toCT1 H)) -> Type :=
+            (CT1_morphism C H) -> (CT1_morphism C H) -> Type :=
   | ct1_nat (N : CT2_morphism (CT1_product interval_CT1 C) H) :
       CT1_naturalt C H (inclusion_top N) (inclusion_bot N).
+
+
+(* [H^C] *)
+Definition exponential (H : CT2) (C : CT1) : CT1 :=
+  (CT1_morphism C H ; CT1_naturalt C H).
