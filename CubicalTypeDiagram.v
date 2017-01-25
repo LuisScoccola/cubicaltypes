@@ -14,6 +14,8 @@ Definition CT2_diagram (C : CT2) : Type :=
 Definition CT3_diagram (C : CT3) : Type :=
   CT3_morphism C universe_CT3.
 
+
+(* constant diagrams *)
 Definition CT1_const_diagram
              (C : CT1) (T : Type) : 
                CT1_diagram C.
@@ -63,3 +65,12 @@ Proof.
   unfold combinatorial_cubes_morph.
   intros. exact idcommutativecube.
 Defined.
+
+
+(* cones *)
+
+Definition cone1 {C : CT1} (D : CT1_diagram C) (d : Type) :=
+  CT1_naturalt _ universe_CT2 D (CT1_const_diagram C d).
+
+Definition cone2 {C : CT2} (D : CT2_diagram C) (d : Type) :=
+  CT2_naturalt _ universe_CT3 D (CT2_const_diagram C d).

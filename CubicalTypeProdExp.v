@@ -102,6 +102,7 @@ Definition flip_involution {A B : Type} (ab : A * B) : flip (flip ab) = ab :=
   end.
 
 
+
 (* this the 1-dimensional version of flip *)
 Definition prod11_onecells_map_to {C D : CT1} (x y : prod11_zerocells C D) :
                                   prod11_onecells C D x y -> prod11_onecells D C (flip x) (flip y) :=
@@ -109,12 +110,13 @@ Definition prod11_onecells_map_to {C D : CT1} (x y : prod11_zerocells C D) :
              | edge_vert i0 i1 ai j => vert_edge j ai
              | vert_edge i j0 j1 aj => edge_vert aj i
            end.
-
+Notation flip0 := flip.
+Notation flip1 := prod11_onecells_map_to.
 
 Definition prod11_onecells_map_from {C D : CT1} (x y : prod11_zerocells C D) :
-                                prod11_onecells D C (flip x) (flip y) -> prod11_onecells C D x y :=
-  let (x0 , x1) := x in
-  let (y0 , y1) := y in prod11_onecells_map_to (x1 , x0) (y1 , y0).
+                                      prod11_onecells D C (flip x) (flip y) ->
+                                        prod11_onecells C D x y :=
+  prod11_onecells_map_to (flip x) (flip y).
 
 
 Definition prod11_onecells_map_to_from {C D : CT1} (x y : prod11_zerocells C D) :
@@ -126,9 +128,9 @@ Definition prod11_onecells_map_to_from {C D : CT1} (x y : prod11_zerocells C D) 
 
 
 Definition prod11_onecells_map_from_to {C D : CT1} (x y : prod11_zerocells C D) :
-                                     (prod11_onecells_map_to x y) o (prod11_onecells_map_from x y) == idmap :=
-  let (x0 , x1) := x in
-  let (y0 , y1) := y in prod11_onecells_map_to_from (x1 , x0) (y1 , y0).
+                                     (prod11_onecells_map_to x y) o
+                                     (prod11_onecells_map_from x y) == idmap :=
+  prod11_onecells_map_to_from (flip x) (flip y).
 
 
 
@@ -157,6 +159,36 @@ Qed.
 
 
 
+(* this is the 2-dimensional version of flip *)
+Definition prod11_twocells_map_to {C D : CT1}
+             {v00 v01 v10 v11 : prod11_zerocells C D}
+             (a0x : prod11_onecells C D v00 v01) (a1x : prod11_onecells C D v10 v11)
+             (ax0 : prod11_onecells C D v00 v10) (ax1 : prod11_onecells C D  v01 v11) :
+               prod11_twocells C D _ _ _ _ a0x a1x ax0 ax1 ->
+                 prod11_twocells D C _ _ _ _   (* the middle points are interchanged! *)
+                                     (flip1 _ _ ax0) (flip1 _ _ ax1)
+                                     (flip1 _ _ a0x) (flip1 _ _ a1x) :=
+  fun X => match X with
+             | square _ _ ai _ _ aj => square aj ai
+           end.
+
+(*
+Definition prod11_twocells_map_from {C D : CT1}
+             {v00 v01 v10 v11 : prod11_zerocells C D}
+             (a0x : prod11_onecells C D v00 v01) (a1x : prod11_onecells C D v10 v11)
+             (ax0 : prod11_onecells C D v00 v10) (ax1 : prod11_onecells C D v01 v11) :
+               prod11_twocells D C _ _ _ _ (flip1 _ _ ax0) (flip1 _ _ ax1)
+                                           (flip1 _ _ a0x) (flip1 _ _ a1x) ->
+                 prod11_twocells C D _ _ _ _ a0x a1x ax0 ax1.
+Proof.
+  intro X.
+  pose (test := prod11_twocells_map_to (flip1 _ _ ax0) (flip1 _ _ ax1) (flip1 _ _ a0x) (flip1 _ _ a1x) X).
+  simpl in test.
+*)
+
+
+
+
 (* product is commutative, unfinished
 
 
@@ -177,6 +209,7 @@ Definition commute `{Univalence}
                    (C D : CT1) : CT1_product C D = CT1_product D C.
 *)
 
+
 (* 1-natural transformation: if [C] is a 1-CT and [H] is a 2-CT
    we form the 1-CT [H^C].
      - The 0-cells are 1-morphisms [C -> H.1]
@@ -189,10 +222,7 @@ Proof.
   exists ( fun c0 => N.1 (false , c0) ).
   exact (fun _ _ a => N.2.1 _ _ (@vert_edge interval_CT1 C false _ _ a)).
 Defined.
-  (*
-  ( fun c0 => N.1 (false , c0)
-  ; fun c0 c1 a => N.2.1 (false , c0) (false , c1) (@vert_edge interval_CT1 C false c0 c1 a)).
-  *)
+
 Definition inclusion_bot1 {C : CT1} {H : CT2}
                           (N : CT2_morphism (CT1_product interval_CT1 C) H) :
                             CT1_morphism C H.
