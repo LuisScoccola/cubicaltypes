@@ -2,8 +2,6 @@ Require Import HoTT.
 
 
 (* TODO:
-     - product C1T x C2T -> C3T
-     - natural transformation C2T C3T
      - cone
      - (co)limit
      - product is commutative
