@@ -1,0 +1,5 @@
+-R . CubicalType
+./CubicalType.v
+./CubicalTypeExamples.v
+./CubicalTypeProdExp.v
+./CubicalTypeDiagram.v
