@@ -2,17 +2,22 @@ Require Import HoTT.
 Require Import CubicalType.
 
 
+      
 (* true < false *)
+Inductive strictly_less : Bool -> Bool -> Type :=
+  | falsetrue : strictly_less false true.
+
+(*
 Definition strictly_less (a b : Bool) : Type :=
   match a with
-    | true => match b with
-                | true => Empty 
-                | false => Unit 
-              end
-    | false => Empty
+    | false => match b with
+                 | true => Unit 
+                 | false => Empty
+               end
+    | true => Empty
   end.
-       
-
+*)
+ 
 (* examples *)
 
 Definition interval_CT1 : CT1 :=
@@ -126,3 +131,24 @@ Definition universe_CT2 : CT2 :=
 
 Definition universe_CT3 : CT3 :=
   (Type ; (map ; (commutative_square ; commutative_cube))).
+
+
+
+(* given a type we have the identity commutative square *)
+Definition id_commutative_square (T : Type) : commutative_square T T T T idmap idmap idmap idmap :=
+  fun x => idpath x.
+
+
+(* given a map between types we have a vertically constant commutative square *)
+Definition vert_ct_commutative_square {S T : Type} (f : S -> T) :
+                                        commutative_square S S T T idmap idmap f f :=
+  fun x => idpath (f x).
+
+
+(* given a map between types we have a vertically constant commutative cube *)
+Definition vert_ct_commutative_cube {S T : Type} (f : S -> T) :
+             commutative_cube S S S S T T T T idmap idmap idmap idmap idmap idmap idmap idmap f f f f
+                              (id_commutative_square S) (id_commutative_square T)
+                              (vert_ct_commutative_square f) (vert_ct_commutative_square f)
+                              (vert_ct_commutative_square f) (vert_ct_commutative_square f) :=
+  fun x => idpath _.
