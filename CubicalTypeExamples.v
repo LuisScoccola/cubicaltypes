@@ -118,7 +118,6 @@ Definition commutative_cube
     (comm_sq_r_wisk fxx0 a11x x) @ (comm_sq_l_wisk a0x0 fx1x x) @ (comm_sq_r_wisk f0xx ax11 x) =
     (comm_sq_l_wisk ax00 f1xx x) @ (comm_sq_r_wisk fx0x a1x1 x) @ (comm_sq_l_wisk a00x fxx1 x).
 
-
 (* maybe this is easier to understand?
 Proof.
   pose (ijkTOjik := comm_sq_r_wisk fxx0 a11x).

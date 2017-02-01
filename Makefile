@@ -114,7 +114,8 @@ endif
 
 VFILES:=CubicalType.v\
   CubicalTypeExamples.v\
-  CubicalTypeProdExp.v\
+  CubicalTypeProduct.v\
+  CubicalTypeExponential.v\
   CubicalTypeDiagram.v
 
 ifneq ($(filter-out archclean clean cleanall printenv,$(MAKECMDGOALS)),)

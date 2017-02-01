@@ -1,5 +1,6 @@
 -R . CubicalType
 ./CubicalType.v
 ./CubicalTypeExamples.v
-./CubicalTypeProdExp.v
+./CubicalTypeProduct.v
+./CubicalTypeExponential.v
 ./CubicalTypeDiagram.v

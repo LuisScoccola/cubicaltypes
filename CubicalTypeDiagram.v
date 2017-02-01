@@ -1,7 +1,8 @@
 Require Import HoTT.
 Require Import CubicalType.
 Require Import CubicalTypeExamples.
-Require Import CubicalTypeProdExp.
+Require Import CubicalTypeProduct.
+Require Import CubicalTypeExponential.
 
 
 (* diagrams *)

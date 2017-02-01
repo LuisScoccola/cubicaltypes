@@ -3,7 +3,7 @@ Require Import HoTT.
 
 (* TODO:
      - (co)limit
-     - composition of diagram morphisms (unfinished)
+     - composition of diagram morphisms (missing 2-diagrams)
      - product is commutative (unfinished)
      - consistent names
 *)
