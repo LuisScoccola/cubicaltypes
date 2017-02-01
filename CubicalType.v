@@ -2,9 +2,9 @@ Require Import HoTT.
 
 
 (* TODO:
-     - cone
      - (co)limit
-     - product is commutative
+     - composition of diagram morphisms (unfinished)
+     - product is commutative (unfinished)
      - consistent names
 *)
 

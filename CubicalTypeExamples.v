@@ -17,12 +17,25 @@ Definition strictly_less (a b : Bool) : Type :=
     | true => Empty
   end.
 *)
+
+(* not needed *)
+Inductive three : Type :=
+  | three0 : three
+  | three1 : three
+  | three2 : three.
+
+Inductive three_edges : three -> three -> Type :=
+  | three01 : three_edges three0 three1
+  | three12 : three_edges three1 three2.
  
 (* examples *)
 
 Definition interval_CT1 : CT1 :=
   ( Bool ; strictly_less ).
 
+(* not needed *)
+Definition long_interval_CT1 : CT1 :=
+  ( three ; three_edges ).
 
 Inductive squares {V : Type} (v00 : V) : forall (v01 v10 v11 : V),
                   v00 = v01 -> v10 = v11 -> v00 = v10 -> v01 = v11 -> Type :=
@@ -152,3 +165,14 @@ Definition vert_ct_commutative_cube {S T : Type} (f : S -> T) :
                               (vert_ct_commutative_square f) (vert_ct_commutative_square f)
                               (vert_ct_commutative_square f) (vert_ct_commutative_square f) :=
   fun x => idpath _.
+
+(* given two commutative squares [A, B] such that [A]'s right edge coincides with
+   [B]'s left edge, we can compose them horizontally. *)
+Definition horiz_commutative_square_comp
+             {V00 V01 V10 V11 V20 V21 : Type}
+             {a0x : map V00 V01} {a1x : map V10 V11} {a2x : map V20 V21}
+             {ax0 : map V00 V10} {ax1 : map V01 V11} {ax0' : map V10 V20} {ax1' : map V11 V21}
+             (S : commutative_square _ _ _ _ a0x a1x ax0 ax1)
+             (T : commutative_square _ _ _ _ a1x a2x ax0' ax1') :
+               commutative_square _ _ _ _ a0x a2x (ax0' o ax0) (ax1' o ax1) :=
+  fun x => (T (ax0 x)) @ (ap ax1' (S x)).

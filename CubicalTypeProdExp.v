@@ -96,8 +96,7 @@ Definition flip0_involutive {A B : Type} (ab : A * B) : flip0 (flip0 ab) = ab :=
   idpath _.
 
 Definition prod11_zerocells_commute `{Univalence}
-                                  (C D : CT1) :
-                                    prod11_zerocells C D = prod11_zerocells D C :=
+                                    (C D : CT1) : prod11_zerocells C D = prod11_zerocells D C :=
   equiv_path_universe _ _ (equiv_prod_symm C.1 D.1).
 
 
@@ -133,7 +132,7 @@ Definition prod11_onecells_map_from_to {C D : CT1} (x y : prod11_zerocells C D) 
                                      (flip1 x y) o
                                      (flip1 (flip0 x) (flip0 y)) == idmap :=
   flip1_involutive (flip0 x) (flip0 y).
-                            
+
 
 
 Definition prod11_onecells_commute `{Univalence}
@@ -151,15 +150,17 @@ Proof.
   rewrite transport_const.
   rewrite (transport_path_universe_V_uncurried flip_equiv _).
   rewrite (transport_path_universe_V_uncurried flip_equiv _).
-  simple refine (BuildEquiv _ _ _ _).
-    - exact (prod11_onecells_map_from x y).
-    - simple refine (isequiv_biinv _ _).
-      exact ((prod11_onecells_map_to x y ; prod11_onecells_map_from_to x y) ,
-             (prod11_onecells_map_to x y ; prod11_onecells_map_to_from x y) ).
+  exact (BuildEquiv _ _ (prod11_onecells_map_from x y)
+           (isequiv_biinv _
+              ((prod11_onecells_map_to x y ; prod11_onecells_map_from_to x y) ,
+               (prod11_onecells_map_to x y ; prod11_onecells_map_to_from x y)
+        ))).
 Qed.
 
 
+(*
 Arguments flip1 {C D} {x y} a.
+*)
 
 (* this is the 2-dimensional version of flip0 *)
 Definition flip2 {C D : CT1}
@@ -168,8 +169,8 @@ Definition flip2 {C D : CT1}
              (ax0 : prod11_onecells C D v00 v10) (ax1 : prod11_onecells C D  v01 v11) :
                prod11_twocells C D _ _ _ _ a0x a1x ax0 ax1 ->
                  prod11_twocells D C _ _ _ _   (* the middle points are interchanged! *)
-                                     (flip1 ax0) (flip1 ax1)
-                                     (flip1 a0x) (flip1 a1x) :=
+                                     (flip1 _ _ ax0) (flip1 _ _ ax1)
+                                     (flip1 _ _ a0x) (flip1 _ _ a1x) :=
   fun X => match X with
              | square _ _ ai _ _ aj => square aj ai
            end.
@@ -181,20 +182,19 @@ Definition prod11_twocells_map_from {C D : CT1}
              {v00 v01 v10 v11 : prod11_zerocells C D}
              (a0x : prod11_onecells C D v00 v01) (a1x : prod11_onecells C D v10 v11)
              (ax0 : prod11_onecells C D v00 v10) (ax1 : prod11_onecells C D v01 v11) :
-               prod11_twocells D C _ _ _ _ (flip1 ax0) (flip1 ax1)
-                                           (flip1 a0x) (flip1 a1x) ->
+               prod11_twocells D C _ _ _ _ (flip1 _ _ ax0) (flip1 _ _ ax1)
+                                           (flip1 _ _ a0x) (flip1 _ _ a1x) ->
                  prod11_twocells C D _ _ _ _ a0x a1x ax0 ax1.
 Proof.
   intro X.
-    (* if things computed a lot, the following would be the answer. For example for flip0 it just works *)
-  pose (t0 := flip2 (flip1 ax0) (flip1 ax1) (flip1 a0x) (flip1 a1x) X).
+    (* If things computed a lot, the following would be the answer.
+       For example for flip0 it just works *)
+  pose (t0 := flip2 (flip1 _ _ ax0) (flip1 _ _ ax1) (flip1 _ _ a0x) (flip1 _ _ a1x) X).
     (* since that's not the case we have to transport a couple of times.
        maybe there's a cleaner way to do this? *)
   pose (t1 := (flip1_involutive _ _ ax1) # t0).
   pose (t2 := transport (fun e => _ e ax1) (flip1_involutive _ _ ax0) t1).
-  simpl in t2.
   pose (t3 := transport (fun e => _ e ax0 ax1) (flip1_involutive _ _ a1x) t2).
-  simpl in t3.
   exact (transport (fun e => _ e a1x ax0 ax1) (flip1_involutive _ _ a0x) t3).
 Defined.
 
@@ -210,6 +210,7 @@ Definition flip2_involutive {C D : CT1}
            end.
 
 
+
 (*
 Definition prod11_twocells_map_from_to {C D : CT1}
              {v00 v01 v10 v11 : prod11_zerocells C D}
@@ -219,15 +220,48 @@ Definition prod11_twocells_map_from_to {C D : CT1}
                  (prod11_twocells_map_from a0x a1x ax0 ax1) == idmap.
 Proof.
   intro X.
-  pose (t0 := flip2_involutive (flip1 ax0) (flip1 ax1) (flip1 a0x) (flip1 a1x) X).
-  
+  induction X.
+  pose (t0 := flip2_involutive (flip1 _ _  ax0) (flip1 _ _ ax1) (flip1 _ _ a0x) (flip1 _ _ a1x) X).
+  unfold prod11_twocells_map_from in t0.
+    induction X.
+  rewrite (transport_arrow _ _ _) in t0.
+  rewrite (flip1_involutive _ _ ax1) in t0.
+  pose (t1 := transport (fun e => (_ e _) = X) (flip1_involutive _ _ ax1) t0).
+  pose (t2 := transport (fun e => _ e ax1) (flip1_involutive _ _ ax0) t1).
+  pose (t3 := transport (fun e => _ e ax0 ax1) (flip1_involutive _ _ a1x) t2).
+  exact (transport (fun e => _ e a1x ax0 ax1) (flip1_involutive _ _ a0x) t3).
+ 
+  unfold prod11_twocells_map_from.
+  rewrite (flip1_involutive _ _ ax1).
 
-  pose (t1 := transport (fun e => _ e _ X) (flip1_involutive _ _ ax1)^ t0).
-  rewrite (flip1_involutive _ _ ax0) in test.
+  induction X.
+
+  pose (t1 := (flip1_involutive _ _ ax1) # t0).
+  rewrite (flip1_involutive _ _ ax1) in t0.
   rewrite (flip1_involutive _ _ a1x) in test.
   rewrite (flip1_involutive _ _ a0x) in test.
+  pose (t1 := (flip1_involutive _ _ ax1)^ # t0).
   exact test.
   intro X. induction X. trivial.
+  
+
+
+
+
+
+  pose (X' := transport (fun e => prod11_twocells _ _ _ _ _ _ _ _ _
+                                    (prod11_onecells_map_to _ _ e))
+                        (flip1_involutive _ _ a1x)^ X).
+  pose (X'' := transport (fun e => prod11_twocells _ _ _ _ _ _ _ _
+                                    (prod11_onecells_map_to _ _ e) _)
+                        (flip1_involutive _ _ a0x)^ X').
+  pose (X''' := transport (fun e => prod11_twocells _ _ _ _ _ _ _
+                                    (prod11_onecells_map_to _ _ e) _ _)
+                        (flip1_involutive _ _ ax1)^ X'').
+  pose (X'''' := transport (fun e => prod11_twocells _ _ _ _ _ _
+                                    (prod11_onecells_map_to _ _ e) _ _ _)
+                        (flip1_involutive _ _ ax0)^ X''').
+  simpl in X''''.
 *)
 
 
@@ -285,6 +319,30 @@ Inductive CT1_naturalt (C : CT1) (H : CT2) :
   | ct1_nat (N : CT2_morphism (CT1_product interval_CT1 C) H) :
       CT1_naturalt C H (inclusion_top1 N) (inclusion_bot1 N).
 
+(* underlying morphism *)
+Definition underlying_morphism_nt1 {C : CT1} {H : CT2} {f g : CT1_morphism C H}
+                                   (N : CT1_naturalt C H f g) :
+                                     CT2_morphism (CT1_product interval_CT1 C) H :=
+  match N with
+    | ct1_nat N' => N'
+  end.
+  (* todo: find better name *)
+Definition underlying_arrows_nt1 {C : CT1} {H : CT2} {f g : CT1_morphism C H}
+                                 (N : CT1_naturalt C H f g) (c : C.1) :
+                                   H.2.1 (f.1 c) (g.1 c) :=
+  match N with
+    | ct1_nat NN => NN.2.1 _ _ (@edge_vert interval_CT1 C _ _ falsetrue c)
+  end.
+
+Definition underlying_squares_nt1 {C : CT1} {H : CT2} {f g : CT1_morphism C H}
+                                  (N : CT1_naturalt C H f g) {c c' : C.1} (a : C.2 c c') :
+                                    H.2.2 _ _ _ _ (f.2 _ _ a) (g.2 _ _ a)
+                                                  (underlying_arrows_nt1 N c)
+                                                  (underlying_arrows_nt1 N c') :=
+  match N with
+    | ct1_nat NN => NN.2.2 _ _ _ _ _ _ _ _ (@square interval_CT1 C _ _ falsetrue _ _ a)
+  end.
+
 
 (* [H^C] *)
 Definition exponential12 (H : CT2) (C : CT1) : CT1 :=
@@ -316,6 +374,16 @@ Inductive CT2_naturalt (C : CT2) (H : CT3) :
   | ct2_nat (N : CT3_morphism (CT12_product interval_CT1 C) H) :
       CT2_naturalt C H (inclusion_top2 N) (inclusion_bot2 N).
 
+(* underlying morphism *)
+Definition underlying_morphism_nt2 {C : CT2} {H : CT3} {f g : CT2_morphism C H}
+                                   (N : CT2_naturalt C H f g) :
+                                     CT3_morphism (CT12_product interval_CT1 C) H :=
+  match N with
+    | ct2_nat N' => N'
+  end.
+
+
 (* [H^C] *)
 Definition exponential23 (H : CT3) (C : CT2) : CT1 :=
   (CT2_morphism C H ; CT2_naturalt C H).
+

@@ -17,12 +17,19 @@ Definition CT3_diagram (C : CT3) : Type :=
 
 (* diagram morphism (just natural transformations) *)
 
-Notation CT1_diagram_morph := CT1_naturalt.
+Definition CT1_diagram_morph {C : CT1} :
+             CT1_diagram C -> CT1_diagram C -> Type :=
+  CT1_naturalt C universe_CT2.
 
-Notation CT2_diagram_morph := CT2_naturalt.
+Definition CT2_diagram_morph {C : CT2} :
+             CT2_diagram C -> CT2_diagram C -> Type :=
+  CT2_naturalt C universe_CT3.
 
 
-(* constant diagrams *)
+(* constant diagrams.
+   Looks like everything about diagrams generalizes to morphisms to arbitrary
+   CTs with denegeracies (identities) *)
+
 Definition CT1_const_diagram
              (C : CT1) (T : Type) : 
                CT1_diagram C.
@@ -146,8 +153,7 @@ Definition CT1_const_diagram_morph' (C : CT1) {S T : Type} (f : S -> T) :
 
 
 Definition CT1_const_diagram_morph (C : CT1) {S T : Type} (f : S -> T) :
-             CT1_diagram_morph _ universe_CT2
-               (CT1_const_diagram C S) (CT1_const_diagram C T) :=
+             CT1_diagram_morph (CT1_const_diagram C S) (CT1_const_diagram C T) :=
   ct1_nat _ _ (CT1_const_diagram_morph' C f). (* <- this computes! *)
 
 
@@ -205,12 +211,12 @@ Definition CT2_const_diagram_morph3 (C : CT2) {S T : Type} (f : S -> T) :
   fun v000 v001 v010 v011 v100 v101 v110 v111
       a00x a01x a10x a11x a0x0 a0x1 a1x0 a1x1 ax00 ax01 ax10 ax11
       f0xx f1xx fx0x fx1x fxx0 fxx1 c =>
-  match c with
-    | cube12 c0 c1 cx v00 v01 v10 v11 a0x a1x ax0 ax1 f' =>
-        match cx with
-          | falsetrue => vert_ct_commutative_cube f
-        end
-  end.
+    match c with
+      | cube12 c0 c1 cx v00 v01 v10 v11 a0x a1x ax0 ax1 f' =>
+          match cx with
+            | falsetrue => vert_ct_commutative_cube f
+          end
+    end.
  
 
 Definition CT2_const_diagram_morph' (C : CT2) {S T : Type} (f : S -> T) :
@@ -223,15 +229,96 @@ Definition CT2_const_diagram_morph' (C : CT2) {S T : Type} (f : S -> T) :
 
 
 Definition CT2_const_diagram_morph (C : CT2) {S T : Type} (f : S -> T) :
-             CT2_diagram_morph _ universe_CT3
-               (CT2_const_diagram C S) (CT2_const_diagram C T) :=
+             CT2_diagram_morph (CT2_const_diagram C S) (CT2_const_diagram C T) :=
   ct2_nat _ _ (CT2_const_diagram_morph' C f). (* <- this computes! *)
 
+
+
+(* composition of diagram morphisms *)
+
+  (* given two composable natural transformations (which can be seen
+     as diagrams over [I x C]) we want to construct a diagram over
+     [lI x C], where [lI] is the long interval
+   *)
+
+Definition CT1_diagram_morph_comp0 {C : CT1} {D E F : CT1_diagram C}
+             (f : CT1_diagram_morph D E) (g : CT1_diagram_morph E F)
+             (x : (CT1_product interval_CT1 C).1) : Type :=
+  let (xi, xc) := x in
+  match xi with
+    | false => D.1 xc
+    | true => F.1 xc
+  end.
+
+Definition CT1_diagram_morph_comp1 {C : CT1} {D E F : CT1_diagram C}
+             (f : CT1_diagram_morph D E) (g : CT1_diagram_morph E F) :
+               combinatorial_arrows_morph (CT1_product interval_CT1 C)
+                                          universe_CT1 
+                                          (CT1_diagram_morph_comp0 f g).
+Proof.
+intros x y X.
+  induction X.
+    - induction ai.
+      exact ((underlying_arrows_nt1 g j) o (underlying_arrows_nt1 f j)).
+    - simple refine (match i with
+               | false => _ (* D.2 _ _ aj*)
+               | true => _ (* F.2 _ _ aj*)
+             end).
+        + simpl. exact (F.2 _ _ aj).
+        + simpl. exact (D.2 _ _ aj).
+Defined.
+  (* todo: make this work
+  refine (
+  fun x y X =>
+  match X with
+    | edge_vert i0 i1 ai j =>
+        match ai with
+          | falsetrue => (underlying_arrows_nt1 g j) o (underlying_arrows_nt1 f j)
+        end
+    | vert_edge i _ _ aj =>
+        match i with
+          | false => F.2 _ _ aj
+          | true => D.2 _ _ aj
+        end
+  end).
+  *)
+
+Definition CT1_diagram_morph_comp2 {C : CT1} {D E F : CT1_diagram C}
+             (f : CT1_diagram_morph D E) (g : CT1_diagram_morph E F) :
+               combinatorial_squares_morph (CT1_product interval_CT1 C)
+                                           universe_CT2
+                                           (CT1_diagram_morph_comp1 f g) :=
+  fun v00 v01 v10 v11 ax0 ax1 a0x a1x c =>
+  match c with
+    | square _ _ ai _ _ aj =>
+        match ai with
+          | falsetrue => horiz_commutative_square_comp (underlying_squares_nt1 f aj)
+                                                       (underlying_squares_nt1 g aj)
+        end
+  end.
+
+Definition CT1_diagram_morph_comp' {C : CT1} {D E F : CT1_diagram C}
+             (f : CT1_diagram_morph D E) (g : CT1_diagram_morph E F) :
+               CT2_diagram (CT1_product interval_CT1 C) :=
+  (CT1_diagram_morph_comp0 f g ; (CT1_diagram_morph_comp1 f g ; CT1_diagram_morph_comp2 f g) ).
+
+Definition CT1_diagram_morph_comp {C : CT1} {D E F : CT1_diagram C}
+             (f : CT1_diagram_morph D E) (g : CT1_diagram_morph E F) :
+               CT1_diagram_morph D F :=
+  ct1_nat _ _ (CT1_diagram_morph_comp' f g). (* <- this computes! *)
+ 
  
 
 (* cones *)
 Definition cone1 {C : CT1} (D : CT1_diagram C) (d : Type) :=
-  CT1_diagram_morph _ universe_CT2 D (CT1_const_diagram C d).
+  CT1_diagram_morph D (CT1_const_diagram C d).
 
 Definition cone2 {C : CT2} (D : CT2_diagram C) (d : Type) :=
-  CT2_diagram_morph _ universe_CT3 D (CT2_const_diagram C d).
+  CT2_diagram_morph D (CT2_const_diagram C d).
+
+
+(* universal cone. *)
+
+Definition induced_cone1 {C : CT1} (D : CT1_diagram C) (d : Type) (cd : cone1 D d) (d' : Type) (f : d -> d') :
+                           cone1 D d' :=
+  CT1_diagram_morph_comp cd (CT1_const_diagram_morph C f).
