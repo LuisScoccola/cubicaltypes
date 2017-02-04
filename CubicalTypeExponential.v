@@ -33,7 +33,7 @@ Inductive CT1_naturalt (C : CT1) (H : CT2) :
   | ct1_nat (N : CT2_morphism (CT1_product interval_CT1 C) H) :
       CT1_naturalt C H (inclusion_top1 N) (inclusion_bot1 N).
 
-(* underlying morphism *)
+(* underlying morphism, not needed *)
 Definition underlying_morphism_nt1 {C : CT1} {H : CT2} {f g : CT1_morphism C H}
                                    (N : CT1_naturalt C H f g) :
                                      CT2_morphism (CT1_product interval_CT1 C) H :=
@@ -41,19 +41,24 @@ Definition underlying_morphism_nt1 {C : CT1} {H : CT2} {f g : CT1_morphism C H}
     | ct1_nat N' => N'
   end.
 
-  (* todo: find better name *)
-Definition underlying_arrows_nt1 {C : CT1} {H : CT2} {f g : CT1_morphism C H}
+(* The following functions return the components of natural transformations.
+   In 1-category theory the components for a natural transformations consists
+   of one arrow for each object in the source category. In our case we have
+   also the higher dimensional components, so we also have a square for each
+   arrow in the source, etc *)
+   
+Definition component_arrows_nt1 {C : CT1} {H : CT2} {f g : CT1_morphism C H}
                                  (N : CT1_naturalt C H f g) (c : C.1) :
                                    H.2.1 (f.1 c) (g.1 c) :=
   match N with
     | ct1_nat NN => NN.2.1 _ _ (@edge_vert interval_CT1 C _ _ falsetrue c)
   end.
 
-Definition underlying_squares_nt1 {C : CT1} {H : CT2} {f g : CT1_morphism C H}
+Definition component_squares_nt1 {C : CT1} {H : CT2} {f g : CT1_morphism C H}
                                   (N : CT1_naturalt C H f g) {c c' : C.1} (a : C.2 c c') :
                                     H.2.2 _ _ _ _ (f.2 _ _ a) (g.2 _ _ a)
-                                                  (underlying_arrows_nt1 N c)
-                                                  (underlying_arrows_nt1 N c') :=
+                                                  (component_arrows_nt1 N c)
+                                                  (component_arrows_nt1 N c') :=
   match N with
     | ct1_nat NN => NN.2.2 _ _ _ _ _ _ _ _ (@square interval_CT1 C _ _ falsetrue _ _ a)
   end.

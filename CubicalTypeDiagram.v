@@ -29,7 +29,7 @@ Definition CT2_diagram_morph {C : CT2} :
 
 (* constant diagrams.
    Looks like everything about diagrams generalizes to morphisms to arbitrary
-   CTs with denegeracies (identities) *)
+   CTs with denegeracies (identities) and composition *)
 
 Definition CT1_const_diagram
              (C : CT1) (T : Type) : 
@@ -155,7 +155,7 @@ Definition CT1_const_diagram_morph' (C : CT1) {S T : Type} (f : S -> T) :
 
 Definition CT1_const_diagram_morph (C : CT1) {S T : Type} (f : S -> T) :
              CT1_diagram_morph (CT1_const_diagram C S) (CT1_const_diagram C T) :=
-  ct1_nat _ _ (CT1_const_diagram_morph' C f). (* <- this computes! *)
+  ct1_nat _ _ (CT1_const_diagram_morph' C f).
 
 
 (* Now, same as before, but for a 2-CT [C] *)
@@ -231,7 +231,7 @@ Definition CT2_const_diagram_morph' (C : CT2) {S T : Type} (f : S -> T) :
 
 Definition CT2_const_diagram_morph (C : CT2) {S T : Type} (f : S -> T) :
              CT2_diagram_morph (CT2_const_diagram C S) (CT2_const_diagram C T) :=
-  ct2_nat _ _ (CT2_const_diagram_morph' C f). (* <- this computes! *)
+  ct2_nat _ _ (CT2_const_diagram_morph' C f).
 
 
 
@@ -260,7 +260,7 @@ Proof.
 intros x y X.
   induction X.
     - induction ai.
-      exact ((underlying_arrows_nt1 g j) o (underlying_arrows_nt1 f j)).
+      exact ((component_arrows_nt1 g j) o (component_arrows_nt1 f j)).
     - simple refine (match i with
                | false => _ (* D.2 _ _ aj*)
                | true => _ (* F.2 _ _ aj*)
@@ -274,7 +274,7 @@ Defined.
   match X with
     | edge_vert i0 i1 ai j =>
         match ai with
-          | falsetrue => (underlying_arrows_nt1 g j) o (underlying_arrows_nt1 f j)
+          | falsetrue => (component_arrows_nt1 g j) o (component_arrows_nt1 f j)
         end
     | vert_edge i _ _ aj =>
         match i with
@@ -293,8 +293,8 @@ Definition CT1_diagram_morph_comp2 {C : CT1} {D E F : CT1_diagram C}
   match c with
     | square _ _ ai _ _ aj =>
         match ai with
-          | falsetrue => horiz_commutative_square_comp (underlying_squares_nt1 f aj)
-                                                       (underlying_squares_nt1 g aj)
+          | falsetrue => horiz_commutative_square_comp (component_squares_nt1 f aj)
+                                                       (component_squares_nt1 g aj)
         end
   end.
 
@@ -306,7 +306,7 @@ Definition CT1_diagram_morph_comp' {C : CT1} {D E F : CT1_diagram C}
 Definition CT1_diagram_morph_comp {C : CT1} {D E F : CT1_diagram C}
              (f : CT1_diagram_morph D E) (g : CT1_diagram_morph E F) :
                CT1_diagram_morph D F :=
-  ct1_nat _ _ (CT1_diagram_morph_comp' f g). (* <- this computes! *)
+  ct1_nat _ _ (CT1_diagram_morph_comp' f g).
  
  
 
