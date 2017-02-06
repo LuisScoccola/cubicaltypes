@@ -134,7 +134,18 @@ Definition prod11_onecells_map_from_to {C D : CT1} (x y : prod11_zerocells C D) 
   flip1_involutive (flip0 x) (flip0 y).
 
 
+(*
+Definition prod11_onecells_commute_pointwise'' {C D : CT1} (x y : prod11_zerocells C D) :
+             IsEquiv (flip1 x y).
+Proof.
+  simple refine
+    (BuildIsEquiv _ _ (isequiv_biinv _
+                         ((prod11_onecells_map_from x y ; prod11_onecells_map_to_from x y)
+                         ,(prod11_onecells_map_from x y ; prod11_onecells_map_from_to x y)))).
 
+
+
+(* we already abstracted basically everything in this Lemma, todo: organize and delete it *)
 (* We know that the commutativity of the 1-cells boils down to the following
    pointwise equivalence of fibrations, so we prove this first *)
 Lemma product_onecells_commute_pointwise `{Univalence} (C D : CT1) (x y : prod11_zerocells D C) :
@@ -206,6 +217,21 @@ Proof.
 Defined.
 
 
+Definition prod11_onecells_commute' `{Univalence}
+             (C D : CT1) :
+             CT2toCT1 (CT1_product C D) = CT2toCT1 (CT1_product D C).
+Proof.
+  apply path_CT1.
+  exists (@equiv_prod_symm C.1 D.1).
+  unfold combinatorial_arrows_path. simpl.
+
+*)
+
+
+
+Arguments flip1 {C D} {x y} a.
+
+
 
 (* this is the 2-dimensional version of flip0 *)
 Definition flip2 {C D : CT1}
@@ -214,8 +240,8 @@ Definition flip2 {C D : CT1}
              (ax0 : prod11_onecells C D v00 v10) (ax1 : prod11_onecells C D  v01 v11) :
                prod11_twocells C D _ _ _ _ a0x a1x ax0 ax1 ->
                  prod11_twocells D C _ _ _ _   (* the middle points are interchanged! *)
-                                     (flip1 _ _ ax0) (flip1 _ _ ax1)
-                                     (flip1 _ _ a0x) (flip1 _ _ a1x) :=
+                                     (flip1 ax0) (flip1 ax1)
+                                     (flip1 a0x) (flip1 a1x) :=
   fun X => match X with
              | square _ _ ai _ _ aj => square aj ai
            end.
@@ -242,10 +268,6 @@ Notation prod11_twocells_map_to := flip2.
 Section Flip2Inverse.
 
 (*
-Arguments flip1 {C D} {x y} a.
-*)
-
-(*
   Context {A : Type} (P : A -> Type) (x y : A) (p : x = y).
 
   Global Instance isequiv_transport : IsEquiv (transport P p) | 0
@@ -265,17 +287,17 @@ Definition TC : Type :=
   prod11_twocells C D _ _ _ _ a0x a1x ax0 ax1.
 
 Definition TCf : Type :=
-  prod11_twocells D C _ _ _ _ (flip1 _ _ ax0) (flip1 _ _ ax1)
-                              (flip1 _ _ a0x) (flip1 _ _ a1x).
+  prod11_twocells D C _ _ _ _ (flip1 ax0) (flip1 ax1)
+                              (flip1 a0x) (flip1 a1x).
 
 Definition TCff : Type  :=
   prod11_twocells C D _ _ _ _
-                     (flip1 _ _ (flip1 _ _ a0x)) (flip1 _ _ (flip1 _ _ a1x))
-                     (flip1 _ _ (flip1 _ _ ax0)) (flip1 _ _ (flip1 _ _ ax1)).
+                     (flip1 (flip1 a0x)) (flip1 (flip1 a1x))
+                     (flip1 (flip1 ax0)) (flip1 (flip1 ax1)).
 
 
 Definition map_a : TCf -> TCff :=
-  flip2 (flip1 _ _ ax0) (flip1 _ _ ax1) (flip1 _ _ a0x) (flip1 _ _ a1x).
+  flip2 (flip1 ax0) (flip1 ax1) (flip1 a0x) (flip1 a1x).
 
 
 Definition path_i : TCff = TC :=
@@ -324,13 +346,13 @@ Context {C D : CT1} {v00 v01 v10 v11 : prod11_zerocells C D}
 
 
 Definition map_joflip2' :=
-  (prod11_twocells_map_from (flip1 _ _ ax0) (flip1 _ _ ax1) (flip1 _ _ a0x) (flip1 _ _ a1x)).
+  (prod11_twocells_map_from (flip1 ax0) (flip1 ax1) (flip1 a0x) (flip1 a1x)).
 
 
   (* aka: [a] has a left inverse: [j o flip2'] *)
 Definition flip2_involutive' :
                map_joflip2' o (map_a a0x a1x ax0 ax1) == idmap :=
-  flip2_involutive (flip1 _ _ ax0) (flip1 _ _ ax1) (flip1 _ _ a0x) (flip1 _ _ a1x).
+  flip2_involutive (flip1 ax0) (flip1 ax1) (flip1 a0x) (flip1 a1x).
 
 
 
@@ -360,21 +382,24 @@ End ioaInverse.
 
 
 
-(*
+(* unfinished: looks like its better characterize the pathspaces in [CT2] first
 Definition prod11_twocells_commute `{Univalence}
              (C D : CT1) :
              (prod11_zerocells_commute C D) # (CT1_product C D).2 = (CT1_product D C).2.
 Proof.
   intros. simpl.
+  rewrite (transport_sigma (prod11_zerocells_commute C D) _).
   simple refine (path_sigma _ _ _ _ _).
     - simpl.
-  admit.
-    - exact (prod11_onecells_commute C D).
-
-
-
-
-
+      exact (prod11_onecells_commute C D).
+    - simpl. 
+      rewrite (apD011 _ _ _).
+      rewrite (transport_arrow _ _ _).
+      rewrite (transport_arrow _ _ _). 
+      rewrite transport_const.
+      rewrite (transport_path_universe_V_uncurried flip_equiv _).
+      rewrite (transport_path_universe_V_uncurried flip_equiv _).
+      reflexivity.
 
 
 
@@ -410,8 +435,8 @@ Definition map_i {C D : CT1}
              {v00 v01 v10 v11 : prod11_zerocells C D}
              {a0x : prod11_onecells C D v00 v01} {a1x : prod11_onecells C D v10 v11}
              {ax0 : prod11_onecells C D v00 v10} {ax1 : prod11_onecells C D v01 v11} :
-               (prod11_twocells C D _ _ _ _ (flip1 _ _ (flip1 _ _ a0x)) (flip1 _ _ (flip1 _ _ a1x))
-                                            (flip1 _ _ (flip1 _ _ ax0)) (flip1 _ _ (flip1 _ _ ax1))) ->
+               (prod11_twocells C D _ _ _ _ (flip1 (flip1 a0x)) (flip1 (flip1 a1x))
+                                            (flip1 (flip1 ax0)) (flip1 (flip1 ax1))) ->
                  (prod11_twocells C D _ _ _ _ a0x a1x ax0 ax1) :=
   transport idmap (path_i a0x a1x ax0 ax1).
 *)
@@ -422,8 +447,8 @@ Definition map_i_inv {C D : CT1}
              (a0x : prod11_onecells C D v00 v01) (a1x : prod11_onecells C D v10 v11)
              (ax0 : prod11_onecells C D v00 v10) (ax1 : prod11_onecells C D v01 v11) :
                (prod11_twocells C D _ _ _ _ a0x a1x ax0 ax1) ->
-                 (prod11_twocells C D _ _ _ _ (flip1 _ _ (flip1 _ _ a0x)) (flip1 _ _ (flip1 _ _ a1x))
-                                              (flip1 _ _ (flip1 _ _ ax0)) (flip1 _ _ (flip1 _ _ ax1))) :=
+                 (prod11_twocells C D _ _ _ _ (flip1 (flip1 a0x)) (flip1 (flip1 a1x))
+                                              (flip1 (flip1 ax0)) (flip1 (flip1 ax1))) :=
   transport idmap (path_i a0x a1x ax0 ax1)^.
  *)
 
@@ -433,14 +458,14 @@ Definition prod11_twocells_flip2' {C D : CT1}
              {v00 v01 v10 v11 : prod11_zerocells C D}
              (a0x : prod11_onecells C D v00 v01) (a1x : prod11_onecells C D v10 v11)
              (ax0 : prod11_onecells C D v00 v10) (ax1 : prod11_onecells C D v01 v11) :
-               prod11_twocells C D _ _ _ _ (flip1 _ _ (flip1 _ _ a0x)) (flip1 _ _ (flip1 _ _ a1x))
-                                           (flip1 _ _ (flip1 _ _ ax0)) (flip1 _ _ (flip1 _ _ ax1)) ->
-                 prod11_twocells D C _ _ _ _ (flip1 _ _ (flip1 _ _ (flip1 _ _ ax0)))
-                                             (flip1 _ _ (flip1 _ _ (flip1 _ _ ax1)))
-                                             (flip1 _ _ (flip1 _ _ (flip1 _ _ a0x)))
-                                             (flip1 _ _ (flip1 _ _ (flip1 _ _ a1x))):=
-  flip2 (flip1 _ _ (flip1 _ _ a0x)) (flip1 _ _ (flip1 _ _ a1x))
-        (flip1 _ _ (flip1 _ _ ax0)) (flip1 _ _ (flip1 _ _ ax1)).
+               prod11_twocells C D _ _ _ _ (flip1 (flip1 a0x)) (flip1 (flip1 a1x))
+                                           (flip1 (flip1 ax0)) (flip1 (flip1 ax1)) ->
+                 prod11_twocells D C _ _ _ _ (flip1 (flip1 (flip1 ax0)))
+                                             (flip1 (flip1 (flip1 ax1)))
+                                             (flip1 (flip1 (flip1 a0x)))
+                                             (flip1 (flip1 (flip1 a1x))):=
+  flip2 (flip1 (flip1 a0x)) (flip1 (flip1 a1x))
+        (flip1 (flip1 ax0)) (flip1 (flip1 ax1)).
 *)
 
 (* OLD
@@ -448,7 +473,7 @@ Proof.
   intro X.
     (* If things computed a lot, the following would be the answer.
        For example for flip0 it just works *)
-  pose (t0 := flip2 (flip1 _ _ ax0) (flip1 _ _ ax1) (flip1 _ _ a0x) (flip1 _ _ a1x) X).
+  pose (t0 := flip2 (flip1 ax0) (flip1 ax1) (flip1 a0x) (flip1 a1x) X).
     (* since that's not the case we have to transport a couple of times.
        maybe there's a cleaner way to do this? *)
   pose (t1 := (flip1_involutive _ _ ax1) # t0).
@@ -467,7 +492,7 @@ Definition prod11_twocells_map_from_to {C D : CT1}
 Proof.
   intro X.
   induction X.
-  pose (t0 := flip2_involutive (flip1 _ _  ax0) (flip1 _ _ ax1) (flip1 _ _ a0x) (flip1 _ _ a1x) X).
+  pose (t0 := flip2_involutive (flip1  ax0) (flip1 ax1) (flip1 a0x) (flip1 a1x) X).
   unfold prod11_twocells_map_from in t0.
     induction X.
   rewrite (transport_arrow _ _ _) in t0.

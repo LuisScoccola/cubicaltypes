@@ -57,6 +57,143 @@ Definition CT3toCT2 (C : CT3) : CT2 :=
 Coercion CT3toCT2 : CT3 >-> CT2.
 
 
+
+(* paths *)
+
+
+  (* this is what we usually know how to construct *)
+Definition combinatorial_arrows_path {C0 D0 : Type}
+             (C1 : combinatorial_arrows C0) (D1 : combinatorial_arrows D0)
+             (p0 : C0 <~> D0) : Type :=
+  forall v0 v1, C1 (p0^-1 v0) (p0^-1 v1) <~> D1 v0 v1.
+
+Definition combinatorial_squares_path {C0 D0 : Type}
+             {C1 : combinatorial_arrows C0} {D1 : combinatorial_arrows D0}
+             (C2 : combinatorial_squares C1) (D2 : combinatorial_squares D1)
+             {p0 : C0 <~> D0} (p1 : combinatorial_arrows_path C1 D1 p0)
+               : Type :=
+  forall v00 v01 v10 v11 : D0,
+  forall a0x : D1 v00 v01, forall a1x : D1 v10 v11,
+  forall ax0 : D1 v00 v10, forall ax1 : D1 v01 v11,
+    C2 _ _ _ _ ((p1 v00 v01)^-1 a0x) ((p1 v10 v11)^-1 a1x)
+               ((p1 v00 v10)^-1 ax0) ((p1 v01 v11)^-1 ax1) <~>
+    D2 _ _ _ _ a0x a1x ax0 ax1.
+
+
+
+  (* characterization of the pathspaces of the type [1CT] *)
+Definition path_CT1 `{Univalence} (C D : CT1) :
+             {p0 : C.1 <~> D.1 & combinatorial_arrows_path C.2 D.2 p0} <~>
+               (C = D).
+Proof.
+    (* [CT1] is a sigma type, so its pathspace can be described as a sigma *)
+  simple refine ((equiv_path_sigma _ C D) oE _).
+    (* an equivalence between sigma types can be given by an equivalence
+       and a fiberwise equivalence *)
+  simple refine (equiv_functor_sigma' (equiv_path_universe C.1 D.1) _).
+  intro p0. simpl.
+  
+
+    (* we have to prove an equivalence [S <~> T], where [T] is an equality
+       between dependent functions. We know this equivalent to a pointwise
+       equivalence *)
+  pose (pointwise2 :=
+  equiv_functor_forall_id (fun x => equiv_path_forall _ _) :
+   (forall x : D.1,
+    transport (fun C0 : Type => combinatorial_arrows C0)
+      (path_universe_uncurried p0) C.2 x == D.2 x)
+     <~>
+       transport (fun C0 : Type => combinatorial_arrows C0)
+     (path_universe_uncurried p0) C.2 == D.2
+  ).
+    (* [equiv_path_arrow] does the job for the first argument [x],
+       then we use [pointwise2] for the second argument [y] *)
+  simple refine ((equiv_path_arrow _ _) oE pointwise2 oE _).
+
+
+    (* now, the [transport ...] can actually be computed, since it
+       is a transport over an equivalence, we do that next *)
+  pose (t0' := fun x => transport_arrow _ _ _ :
+     transport (fun C0 : Type => combinatorial_arrows C0)
+               (path_universe_uncurried p0) C.2 x =
+     transport (fun x0 : Type => x0 -> Type) (path_universe_uncurried p0)
+               (C.2 (transport idmap (path_universe_uncurried p0)^ x))).    
+  pose (t0 := fun x y => ap (fun f => f y) (t0' x)).
+  
+  pose (t1 := fun x y => transport_arrow _ _ _ :
+     transport (fun x0 : Type => x0 -> Type) (path_universe_uncurried p0)
+               (C.2 (transport idmap (path_universe_uncurried p0)^ x)) y =
+     transport (fun _ : Type => Type) (path_universe_uncurried p0)
+               (C.2 (transport idmap (path_universe_uncurried p0)^ x)
+               (transport idmap (path_universe_uncurried p0)^ y))).
+  
+  pose (t2 := fun x y => transport_const _ _ :
+     transport (fun _ : Type => Type) (path_universe_uncurried p0)
+     (C.2 (transport idmap (path_universe_uncurried p0)^ x)
+          (transport idmap (path_universe_uncurried p0)^ y)) =
+     (C.2 (transport idmap (path_universe_uncurried p0)^ x)
+          (transport idmap (path_universe_uncurried p0)^ y))).
+
+  pose (t3' := fun x => transport_path_universe_V_uncurried _ _ :
+     (transport idmap (path_universe_uncurried p0)^ x) =
+     (p0^-1 x)).
+
+  pose (t3 := fun x y => ap (fun e =>
+                    C.2 e (transport idmap (path_universe_uncurried p0)^ y))
+                          (t3' x)).
+
+  pose (t4' := fun y => transport_path_universe_V_uncurried _ _ :
+                 (transport idmap (path_universe_uncurried p0)^ y) =
+                 (p0^-1 y)).
+
+  pose (t4 := fun x y => ap (fun e => C.2 (p0^-1 x) e) (t4' y)).
+
+  pose (t5 := fun x y => (t0 x y) @ (t1 x y) @ (t2 x y) @ (t3 x y) @ (t4 x y)).
+
+    (* the transport lives inside *two* [forall] so we do the following *)
+  pose (t6 :=
+    equiv_functor_forall_id (fun x =>
+      equiv_functor_forall_id (fun y =>
+        equiv_path _ _ (ap (fun e => e = D.2 x y) (t5 x y))))).
+  
+  simple refine ((equiv_inverse t6) oE _).
+
+
+    (* finally, the definition of [combinatorial_arrows_path] asks us to
+       give pointwise equivalences, but this is the same as pointwise
+       equalities, again everything lives inside two [forall] *)
+  pose (t' :=
+    equiv_functor_forall_id (fun x =>
+      equiv_functor_forall_id (fun y => equiv_path_universe _ _)) :
+   (forall v0 v1 : D.1, C.2 (p0^-1 v0) (p0^-1 v1) <~> D.2 v0 v1) <~>
+   (forall v0 v1 : D.1, C.2 (p0^-1 v0) (p0^-1 v1) = D.2 v0 v1)).
+  
+  exact (t').
+Defined.
+  
+  
+(*
+Definition path_CT2 `{Univalence} (C D : CT2)
+             (p0p1p2 : {p0 : C.1 <~> D.1 &
+                         {p1 : combinatorial_arrows_path C.2.1 D.2.1 p0 &
+                           combinatorial_squares_path C.2.2 D.2.2 p1}}) :
+               (C = D).
+Proof.
+  destruct p0p1p2 as (p0, p1p2). destruct p1p2 as (p1, p2).
+  simple refine (path_sigma_uncurried _ _ _ _).
+  exists (path_universe_uncurried p0).
+  simple refine (path_sigma_uncurried _ _ _ _).
+  exists (path_CT1 C D (p0 ; p1)).
+  (* we prove it point-wise *)
+  simple refine (path_forall _ _ _). intro x.
+  simple refine (path_forall _ _ _). intro y.
+  simple refine (path_universe_uncurried _).
+  (* unfinished *)
+*)
+
+
+
+
 (* morphisms *)
 
 Definition combinatorial_arrows_morph (C D : CT1) (M0 : C.1 -> D.1) : Type :=
@@ -152,3 +289,67 @@ Proof.
           (F.2.2.2 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ c)).
 Defined.
 
+
+
+
+
+
+
+
+(* OLD: this gives us a way to construct equalities in [CT1], the fact
+        that this is an equivalence is the proof above 
+
+  (* given a [combinatorial_arrows_path] we get an equality in CT1 *)
+Definition path_CT1 `{Univalence} (C D : CT1)
+             (p0p1 : {p0 : C.1 <~> D.1 & combinatorial_arrows_path C.2 D.2 p0}) :
+               (C = D).
+Proof.
+  destruct p0p1 as (p0, p1).
+  simple refine (path_sigma_uncurried _ _ _ _).
+  exists (path_universe_uncurried p0).
+  (* we prove it point-wise *)
+  simple refine (path_forall _ _ _). intro x.
+  simple refine (path_forall _ _ _). intro y.
+  simple refine (path_universe_uncurried _).
+
+  pose (t0' := transport_arrow _ _ _ :
+     transport (fun C0 : Type => combinatorial_arrows C0)
+               (path_universe_uncurried p0) C.2 x =
+     transport (fun x0 : Type => x0 -> Type) (path_universe_uncurried p0)
+               (C.2 (transport idmap (path_universe_uncurried p0)^ x))).    
+  pose (t0 := ap (fun f => f y) t0').
+  
+  pose (t1 := transport_arrow _ _ _ :
+     transport (fun x0 : Type => x0 -> Type) (path_universe_uncurried p0)
+               (C.2 (transport idmap (path_universe_uncurried p0)^ x)) y =
+     transport (fun _ : Type => Type) (path_universe_uncurried p0)
+               (C.2 (transport idmap (path_universe_uncurried p0)^ x)
+               (transport idmap (path_universe_uncurried p0)^ y))).
+  
+  pose (t3 := transport_const _ _ :
+     transport (fun _ : Type => Type) (path_universe_uncurried p0)
+     (C.2 (transport idmap (path_universe_uncurried p0)^ x)
+          (transport idmap (path_universe_uncurried p0)^ y)) =
+     (C.2 (transport idmap (path_universe_uncurried p0)^ x)
+          (transport idmap (path_universe_uncurried p0)^ y))).
+
+  pose (t4' := transport_path_universe_V_uncurried _ _ :
+     (transport idmap (path_universe_uncurried p0)^ x) =
+     (p0^-1 x)).
+
+  pose (t4 := ap (fun e =>
+                    C.2 e (transport idmap (path_universe_uncurried p0)^ y)) t4').
+
+  pose (t5' := transport_path_universe_V_uncurried _ _ :
+     (transport idmap (path_universe_uncurried p0)^ y) =
+     (p0^-1 y)).
+
+  pose (t5 := ap (fun e => C.2 (p0^-1 x) e) t5').
+
+  pose (t' := t0 @ t1 @ t3 @ t4 @ t5).
+  
+  pose (t := ap (fun e => e <~> D.2 x y) t'). simpl in t.
+  exact (transport idmap t^ (p1 x y)).
+Defined.
+
+*)
