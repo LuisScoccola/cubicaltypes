@@ -112,12 +112,14 @@ Definition flip1 {C D : CT1} (x y : prod11_zerocells C D) :
 Notation prod11_onecells_map_to := flip1.
 
 
+(* the inverse of [flip1] (defined using [flip1]) *)
 Definition prod11_onecells_map_from {C D : CT1} (x y : prod11_zerocells C D) :
                                       prod11_onecells D C (flip0 x) (flip0 y) ->
                                         prod11_onecells C D x y :=
   flip1 (flip0 x) (flip0 y).
 
 
+(* [flip1] has a left inverse *)
 Definition flip1_involutive {C D : CT1} (x y : prod11_zerocells C D) :
                               (flip1 (flip0 x) (flip0 y)) o (flip1 x y) == idmap :=
   fun X => match X with
@@ -128,109 +130,34 @@ Definition flip1_involutive {C D : CT1} (x y : prod11_zerocells C D) :
 Notation prod11_onecells_map_to_from := flip1_involutive.
 
 
+(* [flip1] has a right inverse *)
 Definition prod11_onecells_map_from_to {C D : CT1} (x y : prod11_zerocells C D) :
                                      (flip1 x y) o
                                      (flip1 (flip0 x) (flip0 y)) == idmap :=
   flip1_involutive (flip0 x) (flip0 y).
 
 
-(*
-Definition prod11_onecells_commute_pointwise'' {C D : CT1} (x y : prod11_zerocells C D) :
-             IsEquiv (flip1 x y).
-Proof.
-  simple refine
-    (BuildIsEquiv _ _ (isequiv_biinv _
-                         ((prod11_onecells_map_from x y ; prod11_onecells_map_to_from x y)
-                         ,(prod11_onecells_map_from x y ; prod11_onecells_map_from_to x y)))).
+(* [flip1] is an equivalence *)
+Definition prod11_onecells_commute_pointwise {C D : CT1} (x y : prod11_zerocells C D) :
+             prod11_onecells C D x y <~> prod11_onecells D C (flip0 x) (flip0 y) :=
+  equiv_adjointify (flip1 x y) (prod11_onecells_map_from x y)
+                   (prod11_onecells_map_from_to x y) (prod11_onecells_map_to_from x y).
 
 
-
-(* we already abstracted basically everything in this Lemma, todo: organize and delete it *)
-(* We know that the commutativity of the 1-cells boils down to the following
-   pointwise equivalence of fibrations, so we prove this first *)
-Lemma product_onecells_commute_pointwise `{Univalence} (C D : CT1) (x y : prod11_zerocells D C) :
-  ((prod11_onecells C D) (flip0 x) (flip0 y)) =
-    (transport combinatorial_arrows (prod11_zerocells_commute C D) (prod11_onecells C D) x y).
-Proof.
-  pose (flip_equiv := equiv_prod_symm C.1 D.1).
-
-  pose (t0 := transport_arrow _ _ _ :
-           (transport combinatorial_arrows (prod11_zerocells_commute C D) (prod11_onecells C D) x)
-             = _ ).
-  pose (t0' := ap (fun f => f y) t0).
-  
-  pose (t1 := transport_arrow _ _ _ :
-           (transport (fun x0 : Type => x0 -> Type) (prod11_zerocells_commute C D)
-             (prod11_onecells C D (transport idmap (prod11_zerocells_commute C D)^ x)) y)
-             = _).
-  
-  pose (t2 := transport_const _ _ :
-           transport (fun _ : Type => Type) (prod11_zerocells_commute C D)
-             (prod11_onecells C D (transport idmap (prod11_zerocells_commute C D)^ x)
-                                  (transport idmap (prod11_zerocells_commute C D)^ y))
-           = prod11_onecells C D (transport idmap (prod11_zerocells_commute C D)^ x)
-                                 (transport idmap (prod11_zerocells_commute C D)^ y) ).
-  
-  pose (t3 := transport_path_universe_V_uncurried flip_equiv _ :
-           (transport idmap (prod11_zerocells_commute C D)^ x)
-              = (flip_equiv^-1 x)).
-  pose (t3' := ap (fun e => prod11_onecells C D e (transport idmap (prod11_zerocells_commute C D)^ y)) t3).
-
-  pose (t4 := transport_path_universe_V_uncurried flip_equiv _ :
-           (transport idmap (prod11_zerocells_commute C D)^ y)
-             = (flip_equiv^-1 y)). 
-  pose (t4' := ap (fun e => prod11_onecells C D (flip_equiv^-1 x) e) t4).
-
-  exact (t0' @ t1 @ t2 @ t3' @ t4')^.
-   
-  (* the above is an explicit version of:
-  rewrite (transport_arrow _ _ _).
-  rewrite (transport_arrow _ _ _). 
-  rewrite transport_const.
-  rewrite (transport_path_universe_V_uncurried flip_equiv _).
-  rewrite (transport_path_universe_V_uncurried flip_equiv _).
-  reflexivity.
-  *)
-Defined.
-
-
-Definition prod11_onecells_commute `{Univalence}
-             (C D : CT1) :
-             (prod11_zerocells_commute C D) # (CT1_product C D).2.1 = (CT1_product D C).2.1.
-Proof.
-  (* we prove it point-wise *)
-  simple refine (path_forall _ _ _). intro x.
-  simple refine (path_forall _ _ _). intro y.
-  simple refine (path_universe_uncurried _).
-
-  (* this is the pointwise equivalence *)
-  pose (myequiv := BuildEquiv _ _ (prod11_onecells_map_from x y)
-           (isequiv_biinv _
-              ((prod11_onecells_map_to x y ; prod11_onecells_map_from_to x y) ,
-               (prod11_onecells_map_to x y ; prod11_onecells_map_to_from x y)
-        ))).
-
-  pose (t0 := ap (fun e => e <~> (prod11_onecells D C) x y)
-                                    (product_onecells_commute_pointwise C D x y)).
-
-  exact (transport idmap t0 myequiv).
-Defined.
-
-
-Definition prod11_onecells_commute' `{Univalence}
+(* the underlying 1-CT of a product [C x D] is equal to the
+   underlying 1-CT of the product [D x C] (just as an example of [path_CT1]) *)
+Definition prod11_oneskeleton_commute `{Univalence}
              (C D : CT1) :
              CT2toCT1 (CT1_product C D) = CT2toCT1 (CT1_product D C).
 Proof.
   apply path_CT1.
   exists (@equiv_prod_symm C.1 D.1).
-  unfold combinatorial_arrows_path. simpl.
-
-*)
+  exact (fun x y => equiv_inverse (prod11_onecells_commute_pointwise x y)).
+Defined.
 
 
 
 Arguments flip1 {C D} {x y} a.
-
 
 
 (* this is the 2-dimensional version of flip0 *)
@@ -533,6 +460,91 @@ Proof.
 *)
 
 (* product is commutative, unfinished
+
+*)
+
+
+
+
+
+
+
+
+
+
+
+
+(*
+(* we already abstracted basically everything in this Lemma, todo: organize and delete it *)
+(* We know that the commutativity of the 1-cells boils down to the following
+   pointwise equivalence of fibrations, so we prove this first *)
+Lemma product_onecells_commute_pointwise `{Univalence} (C D : CT1) (x y : prod11_zerocells D C) :
+  ((prod11_onecells C D) (flip0 x) (flip0 y)) =
+    (transport combinatorial_arrows (prod11_zerocells_commute C D) (prod11_onecells C D) x y).
+Proof.
+  pose (flip_equiv := equiv_prod_symm C.1 D.1).
+
+  pose (t0 := transport_arrow _ _ _ :
+           (transport combinatorial_arrows (prod11_zerocells_commute C D) (prod11_onecells C D) x)
+             = _ ).
+  pose (t0' := ap (fun f => f y) t0).
+  
+  pose (t1 := transport_arrow _ _ _ :
+           (transport (fun x0 : Type => x0 -> Type) (prod11_zerocells_commute C D)
+             (prod11_onecells C D (transport idmap (prod11_zerocells_commute C D)^ x)) y)
+             = _).
+  
+  pose (t2 := transport_const _ _ :
+           transport (fun _ : Type => Type) (prod11_zerocells_commute C D)
+             (prod11_onecells C D (transport idmap (prod11_zerocells_commute C D)^ x)
+                                  (transport idmap (prod11_zerocells_commute C D)^ y))
+           = prod11_onecells C D (transport idmap (prod11_zerocells_commute C D)^ x)
+                                 (transport idmap (prod11_zerocells_commute C D)^ y) ).
+  
+  pose (t3 := transport_path_universe_V_uncurried flip_equiv _ :
+           (transport idmap (prod11_zerocells_commute C D)^ x)
+              = (flip_equiv^-1 x)).
+  pose (t3' := ap (fun e => prod11_onecells C D e (transport idmap (prod11_zerocells_commute C D)^ y)) t3).
+
+  pose (t4 := transport_path_universe_V_uncurried flip_equiv _ :
+           (transport idmap (prod11_zerocells_commute C D)^ y)
+             = (flip_equiv^-1 y)). 
+  pose (t4' := ap (fun e => prod11_onecells C D (flip_equiv^-1 x) e) t4).
+
+  exact (t0' @ t1 @ t2 @ t3' @ t4')^.
+   
+  (* the above is an explicit version of:
+  rewrite (transport_arrow _ _ _).
+  rewrite (transport_arrow _ _ _). 
+  rewrite transport_const.
+  rewrite (transport_path_universe_V_uncurried flip_equiv _).
+  rewrite (transport_path_universe_V_uncurried flip_equiv _).
+  reflexivity.
+  *)
+Defined.
+
+
+Definition prod11_onecells_commute `{Univalence}
+             (C D : CT1) :
+             (prod11_zerocells_commute C D) # (CT1_product C D).2.1 = (CT1_product D C).2.1.
+Proof.
+  (* we prove it point-wise *)
+  simple refine (path_forall _ _ _). intro x.
+  simple refine (path_forall _ _ _). intro y.
+  simple refine (path_universe_uncurried _).
+
+  (* this is the pointwise equivalence *)
+  pose (myequiv := BuildEquiv _ _ (prod11_onecells_map_from x y)
+           (isequiv_biinv _
+              ((prod11_onecells_map_to x y ; prod11_onecells_map_from_to x y) ,
+               (prod11_onecells_map_to x y ; prod11_onecells_map_to_from x y)
+        ))).
+
+  pose (t0 := ap (fun e => e <~> (prod11_onecells D C) x y)
+                                    (product_onecells_commute_pointwise C D x y)).
+
+  exact (transport idmap t0 myequiv).
+Defined.
 
 *)
 
