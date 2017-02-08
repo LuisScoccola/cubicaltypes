@@ -294,7 +294,7 @@ Defined.
 
 
 
-  (* characterization of the pathspaces of the type [1CT] *)
+  (* characterization of the identity types of the type [1CT] *)
 Definition path_CT1 `{Univalence} (C D : CT1) :
              CT1_combinatorial_eq C D <~> (C = D).
 Proof.
@@ -306,23 +306,184 @@ Proof.
 
   exact (arrows_path C D).
 Defined.
-           
+
+
+
+Definition transp_proj1_commute {A : Type} (B : A -> Type) (C : forall a, B a -> Type)
+                     {x y : A} (p : x = y) (s : {b : B x & C x b}) :
+                       (transport (fun a => {b : B a & C a b }) p s).1 =
+                        transport B p s.1.
+Proof.
+  destruct p. reflexivity.
+Defined.
 
 
   (* todo: find a better name *)
 Definition squares_path `{Univalence}
   (C D : CT2) {p0 : C.1 <~> D.1} (p1 : combinatorial_arrows_path C.2.1 D.2.1 p0) :
-     combinatorial_squares_path (C.2).2 (D.2).2 p1 <~>
-     transport (fun C1 : combinatorial_arrows D.1 => combinatorial_squares C1)
-               (arrows_path C D p0 p1)
-               (transportD combinatorial_arrows (@combinatorial_squares)
-                           (path_universe_uncurried p0) (C.2).1 (C.2).2) = (D.2).2.
+   combinatorial_squares_path (C.2).2 (D.2).2 p1 <~>
+   transport (fun C1 : combinatorial_arrows D.1 => combinatorial_squares C1)
+     (transport (fun e : combinatorial_arrows D.1 => e = (D.2).1)
+        (transp_proj1_commute combinatorial_arrows (@combinatorial_squares)
+           (path_universe_uncurried p0) C.2)^
+        (path_forall
+           (transport (fun C0 : Type => combinatorial_arrows C0)
+              (path_universe_uncurried p0) (C.2).1) (D.2).1
+           (functor_forall idmap
+              (fun a0 : D.1 =>
+               path_forall
+                 (transport (fun C0 : Type => combinatorial_arrows C0)
+                    (path_universe_uncurried p0) (C.2).1 a0) 
+                 ((D.2).1 a0))
+              (functor_forall idmap
+                 (fun (x : D.1)
+                    (y : forall a0 : D.1,
+                         (C.2).1 (p0^-1 x) (p0^-1 a0) = (D.2).1 x a0) =>
+                  functor_forall idmap
+                    (fun (x0 : D.1)
+                       (y0 : (C.2).1 (p0^-1 x) (p0^-1 x0) = (D.2).1 x x0) =>
+                     transport idmap
+                       (ap (fun e : Type => e = (D.2).1 x x0)
+                          (transport_arrows C D.1 p0 x x0))^ y0) y)
+                 (functor_forall idmap
+                    (fun a0 : D.1 =>
+                     functor_forall idmap
+                       (fun a1 : D.1 => path_universe_uncurried)) p1)))))
+     (transport
+        (fun C0 : Type =>
+         {C1 : combinatorial_arrows C0 & combinatorial_squares C1})
+        (path_universe_uncurried p0) C.2).2 = (D.2).2.
 Proof.
+  rewrite (transport_paths_l _ _).
+  rewrite (inv_V _).
+  
+
+  (*
+  (* the equality in the RHS is equivalent to a pointwise equality, we
+     do this for the eight arguments *)
+  (* v00 *)
+  simple refine ((equiv_path_forall _ _) oE _).
+  (* v01 *)
+  simple refine ((equiv_functor_forall_id
+                   (fun a => equiv_path_forall _ _)) oE _).
+  (* v10 *)
+  simple refine ((equiv_functor_forall_id
+                   (fun a => equiv_functor_forall_id
+                   (fun a => equiv_path_forall _ _))) oE _).
+  (* v11 *)
+  simple refine ((equiv_functor_forall_id
+                   (fun a => equiv_functor_forall_id
+                   (fun a => equiv_functor_forall_id
+                   (fun a => equiv_path_forall _ _)))) oE _).
+  simple refine (equiv_functor_forall_id _). intro v00.
+  simple refine (equiv_functor_forall_id _). intro v01.
+  simple refine (equiv_functor_forall_id _). intro v10.
+  simple refine (equiv_functor_forall_id _). intro v11.
+  rewrite (transport_forall _ _ _).
+  rewrite (transport_forall _ _ _).
+  rewrite (transport_forall _ _ _).
+  rewrite (transport_forall _ _ _).
+  rewrite (transport_const).
+
+  *)
+
+  (* the equality in the RHS is equivalent to a pointwise equality, we
+     do this for the eight arguments *)
+  (* v00 *)
+  simple refine ((equiv_path_forall _ _) oE _).
+  (* v01 *)
+  simple refine ((equiv_functor_forall_id
+                   (fun a => equiv_path_forall _ _)) oE _).
+  (* v10 *)
+  simple refine ((equiv_functor_forall_id
+                   (fun a => equiv_functor_forall_id
+                   (fun a => equiv_path_forall _ _))) oE _).
+  (* v11 *)
+  simple refine ((equiv_functor_forall_id
+                   (fun a => equiv_functor_forall_id
+                   (fun a => equiv_functor_forall_id
+                   (fun a => equiv_path_forall _ _)))) oE _).
+  (* a0x *)
+  simple refine ((equiv_functor_forall_id
+                   (fun a => equiv_functor_forall_id
+                   (fun a => equiv_functor_forall_id
+                   (fun a => equiv_functor_forall_id
+                   (fun a => equiv_path_forall _ _))))) oE _).
+  (* a1x *)
+  simple refine ((equiv_functor_forall_id
+                   (fun a => equiv_functor_forall_id
+                   (fun a => equiv_functor_forall_id
+                   (fun a => equiv_functor_forall_id
+                   (fun a => equiv_functor_forall_id
+                   (fun a => equiv_path_forall _ _)))))) oE _).
+  (* ax0 *)
+  simple refine ((equiv_functor_forall_id
+                   (fun a => equiv_functor_forall_id
+                   (fun a => equiv_functor_forall_id
+                   (fun a => equiv_functor_forall_id
+                   (fun a => equiv_functor_forall_id
+                   (fun a => equiv_functor_forall_id
+                   (fun a => equiv_path_forall _ _))))))) oE _).
+  (* ax1 *)
+  simple refine ((equiv_functor_forall_id
+                   (fun a => equiv_functor_forall_id
+                   (fun a => equiv_functor_forall_id
+                   (fun a => equiv_functor_forall_id
+                   (fun a => equiv_functor_forall_id
+                   (fun a => equiv_functor_forall_id
+                   (fun a => equiv_functor_forall_id
+                   (fun a => equiv_path_forall _ _)))))))) oE _).
+  (* an equivalence of [forall] over the same basis can be proven
+     by giving an equivalence between the fibrations. Again, we
+     have to do this for the eight arguments *)
+  simple refine (equiv_functor_forall_id _). intro v00.
+  simple refine (equiv_functor_forall_id _). intro v01.
+  simple refine (equiv_functor_forall_id _). intro v10.
+  simple refine (equiv_functor_forall_id _). intro v11.
+  simple refine (equiv_functor_forall_id _). intro a0x.
+  simple refine (equiv_functor_forall_id _). intro a1x.
+  simple refine (equiv_functor_forall_id _). intro ax0.
+  simple refine (equiv_functor_forall_id _). intro ax1.
+  simpl.
+  
+  (*
+  rewrite (transport_forall _ _ _).
+  rewrite (transport_forall _ _ _).
+  rewrite (transport_forall _ _ _).
+  rewrite (transport_forall _ _ _).
+  rewrite (transport_forall _ _ _).
+  rewrite (transport_forall _ _ _).
+  rewrite (transport_forall _ _ _).
+  rewrite (transport_forall _ _ _).
+  *)
+  
   admit.
+  (*
+  rewrite (transport_path_universe_uncurried p0 _).
+rewrite (apD011 _ _ _).
+  rewrite (transport_forall _ _ _).
+  unfold transportD.
+
+
+
+  unfold combinatorial_squares_path.
+  
+  simpl.
+
+  simple refine ((equiv_path_forall _ _) oE _).
+  simpl.
+  rewrite (transport_arrow _ _ _).
+  simpl.  
+
+  rewrite <- (path_forall _ _ _).
+  unfold combinatorial_arrows.
+  unfold combinatorial_squares.
+  rewrite (transport_forall _ _ _).
+  *)
+
+
   (* unfinished *)
   (* 
-  rewrite (transport_arrow _ _ _).
-  rewrite (transport_arrow _ _ _).
   rewrite transport_const.
   rewrite (transport_path_universe_V_uncurried flip_equiv _).
   rewrite (transport_path_universe_V_uncurried flip_equiv _).
@@ -343,12 +504,60 @@ Proof.
     (* again, the RHS is a sigma *)
   simple refine ((equiv_path_sigma _ _ _) oE _).
     (* we have to give an equivalence between the base types (of the simgas).
-       This is what we needed in the CT1 case. But first, in the RHS we
-       have to use a lemma about transport in sigmas *)
-  (* -> *) rewrite (transport_sigma _ _). simpl.
-  simple refine (equiv_functor_sigma' (arrows_path C D p0) _).
-  exact (squares_path C D).
-Qed.
+       This is what we needed in the CT1 case. *)
+  (* todo: don't use rewrite *) 
+  simple refine (equiv_functor_sigma' _ _).
+    (* first, since we only use the first coordinate, the transport can
+       be simplified *)
+    - pose (t := transp_proj1_commute combinatorial_arrows (@combinatorial_squares)
+                           (path_universe_uncurried p0) C.2).
+      pose (t' := equiv_transport (fun e => e = D.2.1) _ _ t). simpl in t'.
+      refine (t'^-1 oE _).
+      exact (arrows_path C D p0).
+    - simpl.
+      exact (squares_path C D).
+Defined.
+
+
+
+
+(*** opposites:
+       - given a 1-CT (graph) we can consider its opposite
+       - given a 2-CT we can consider its 1-opposite or its 2-opposite.
+         the former flips all the arrows (and the squares accordingly),
+         while the latter flips only the squares
+ *)
+
+Definition CT1_opposite (C : CT1) : CT1.
+Proof.
+  exists C.1.
+  exact (fun x y => C.2 y x).
+  (* why doesn't the following work:
+     (C.1 ; fun x y : C.1 => C.2 y x). *)
+Defined.
+
+Definition CT2_opposite_2 (C : CT2) : CT2.
+Proof.
+  exists C.1.
+  exists C.2.1.
+  exact (fun v00 v01 v10 v11 ax0 ax1 a0x a1x =>
+           C.2.2 v00 v10 v01 v11 (* middle points are interchanged *)
+                 a0x a1x ax0 ax1).
+Defined.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

@@ -85,8 +85,10 @@ Definition CT12_product (C : CT1) (D : CT2) : CT3 :=
   ))).
 
 
-(* now we want to prove that the 1,1-product is commutative *)
-
+(* now we want to prove that the 1,1-product is "commutative".
+   We say "commutative" because [C x D] is actually equivalent
+   to the 2opposite of [D x C]. This means it has the same underlying
+   1-CT (as we prove explicitly) but all the squares are "fliped" *)
 
 Definition flip0 {A B : Type} : A * B -> B * A :=
   fun ab => (snd ab , fst ab).
@@ -139,9 +141,10 @@ Definition prod11_onecells_map_from_to {C D : CT1} (x y : prod11_zerocells C D) 
 
 (* [flip1] is an equivalence *)
 Definition prod11_onecells_commute_pointwise {C D : CT1} (x y : prod11_zerocells C D) :
-             prod11_onecells C D x y <~> prod11_onecells D C (flip0 x) (flip0 y) :=
-  equiv_adjointify (flip1 x y) (prod11_onecells_map_from x y)
-                   (prod11_onecells_map_from_to x y) (prod11_onecells_map_to_from x y).
+                                               prod11_onecells D C (flip0 x) (flip0 y) <~>
+                                               prod11_onecells C D x y :=
+  equiv_adjointify (prod11_onecells_map_from x y) (flip1 x y)
+                   (prod11_onecells_map_to_from x y) (prod11_onecells_map_from_to x y).
 
 
 (* the underlying 1-CT of a product [C x D] is equal to the
@@ -152,7 +155,7 @@ Definition prod11_oneskeleton_commute `{Univalence}
 Proof.
   apply path_CT1.
   exists (@equiv_prod_symm C.1 D.1).
-  exact (fun x y => equiv_inverse (prod11_onecells_commute_pointwise x y)).
+  exact (fun x y => prod11_onecells_commute_pointwise x y).
 Defined.
 
 
@@ -178,7 +181,6 @@ Notation prod11_twocells_map_to := flip2.
 
 
 
-
 (*
   We now construct the inverse of flip2.
 
@@ -193,17 +195,6 @@ Notation prod11_twocells_map_to := flip2.
 
 
 Section Flip2Inverse.
-
-(*
-  Context {A : Type} (P : A -> Type) (x y : A) (p : x = y).
-
-  Global Instance isequiv_transport : IsEquiv (transport P p) | 0
-    := BuildIsEquiv (P x) (P y) (transport P p) (transport P p^)
-    (transport_pV P p) (transport_Vp P p) (transport_pVp P p).
-
-  Definition equiv_transport : P x <~> P y
-    := BuildEquiv _ _ (transport P p) _.
-*)
  
 Context {C D : CT1} {v00 v01 v10 v11 : prod11_zerocells C D}
         (a0x : prod11_onecells C D v00 v01) (a1x : prod11_onecells C D v10 v11)
@@ -298,15 +289,69 @@ Proof.
   apply flip2_involutive'.
 Qed.
 
-
-Definition isequiv_ioa : IsEquiv (prod11_twocells_map_from a0x a1x ax0 ax1) :=
-  isequiv_biinv _
-    (( ( prod11_twocells_map_from _ _ _ _) o (map_i a0x a1x ax0 ax1)^-1
-       ; prod11_twocells_fl)
-     , ( flip2 a0x a1x ax0 ax1 ; flip2_involutive a0x a1x ax0 ax1)).
-
 End ioaInverse.
 
+
+  (* [i o a] is an equivalence *)
+Definition prod11_twocells_commute_pointwise {C D : CT1} {v00 v01 v10 v11 : prod11_zerocells C D}
+             (a0x : prod11_onecells C D v00 v01) (a1x : prod11_onecells C D v10 v11)
+             (ax0 : prod11_onecells C D v00 v10) (ax1 : prod11_onecells C D v01 v11) :
+               prod11_twocells D C _ _ _ _ (flip1 ax0) (flip1 ax1)
+                                           (flip1 a0x) (flip1 a1x) <~>
+               prod11_twocells C D _ _ _ _ a0x a1x ax0 ax1.
+Proof.
+  exists (prod11_twocells_map_from a0x a1x ax0 ax1).
+  exact (isequiv_biinv _
+    (( ( prod11_twocells_map_from _ _ _ _) o (map_i a0x a1x ax0 ax1)^-1
+       ; prod11_twocells_fl a0x a1x ax0 ax1)
+     , ( flip2 a0x a1x ax0 ax1 ; flip2_involutive a0x a1x ax0 ax1))).
+Defined.
+
+
+(* the product of 1-CT is "commutative" *)
+Definition prod11_commute `{Univalence}
+             (C D : CT1) : CT2_opposite_2 (CT1_product C D) = CT1_product D C.
+Proof.
+  apply path_CT2.
+  exists (@equiv_prod_symm C.1 D.1).
+  exists (fun x y => prod11_onecells_commute_pointwise x y).
+  exact (fun v00 v01 v10 v11 ax0 ax1 a0x a1x =>
+           prod11_twocells_commute_pointwise ax0 ax1 a0x a1x).
+Defined.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+(* once it works we can delete these: *)
+
+
+(*
+  exists (prod11_onecells_map_from x y).
+  simple refine (BuildIsEquiv _ _ (prod11_onecells_map_from x y) (flip1 x y)
+                                  (prod11_onecells_map_to_from x y)
+                                  (prod11_onecells_map_from_to x y) _).
+  intro. simpl. 
+
+  equiv_adjointify (prod11_onecells_map_from x y) (flip1 x y)
+                   (prod11_onecells_map_to_from x y) (prod11_onecells_map_from_to x y).
+*)
 
 
 (* unfinished: looks like its better characterize the pathspaces in [CT2] first
@@ -343,19 +388,6 @@ Proof.
           
 *)
 
-
-
-
-
-
-
-
-
-
-
-
-
-(* once it works we can delete these: *)
 
 (*
 Definition map_i {C D : CT1}
