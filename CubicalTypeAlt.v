@@ -267,10 +267,24 @@ Admitted.
 Definition transport_s1'
              (C : Type) (D : CT1) (p0 : D.1 = C) (v : s1_bound C) :
                transport s1 p0 D.2 v =
-               D.2 (s1b_map (transport idmap p0^) v).
+               D.2 (s1b_map (equiv_path _ _ p0^) v).
 Proof.
   by induction p0.
 Defined.
+
+
+Definition transport_s1'_
+             (C : Type) (D : CT1) (p0 : D.1 = C) (v : s1_bound C) :
+               transport s1 p0 D.2 v =
+               D.2 (s1b_map (equiv_path _ _ p0^) v).
+Proof.
+  rewrite transport_arrow.
+  rewrite transport_const.
+Admitted.
+
+
+
+
 
 Definition transport_s1'' `{Univalence}
              (C : Type) (D : CT1) (p0 : C <~> D.1) (v : s1_bound C) :
@@ -278,13 +292,49 @@ Definition transport_s1'' `{Univalence}
                D.2 (s1b_map p0 v).
 Proof.
   pose (t0 := transport_s1' C D (path_universe_uncurried p0)^ v).
-  refine (t0 @ _).
-  clear t0.
+  refine (t0 @ _) ; clear t0.
   refine (ap D.2 _).
   refine (ap (fun e => (s1b_map (transport idmap e) v)) (inv_V _) @ _ ).
   revert v.
-  exact (s1b_map_htpy_invariant (transport_path_universe_uncurried p0)).
+  refine (s1b_map_htpy_invariant _).
+  intro v.
+  refine (apD10 _ v).
+  exact (transport_idmap_path_universe_uncurried p0).
 Defined.
+
+
+
+
+
+Definition transport_s1''_on_path `{Univalence}
+             (C : Type) (D : CT1) (p : C = D.1) (v : s1_bound C) :
+               transport_s1'' C D (equiv_path C D.1 p) v =
+               (ap (fun e => transport s1 e^ D.2 v) (eta_path_universe_uncurried p)) @
+               (transport_s1' C D p^ v) @
+               (ap (fun e => D.2 (s1b_map (equiv_path C D.1 e) v)) (inv_V p)).
+               (*
+                 ap (fun e => transport s1 e^ C.2 v)
+                   (eta_path_universe_uncurried (idmap _)).
+               *)
+Proof.
+  destruct D as (D0 , D1). simpl in p. induction p.
+  simpl.
+  unfold transport_s1''.
+  simpl.
+  rewrite concat_p1. rewrite concat_p1.
+  unfold transport_idmap_path_universe_uncurried.
+  unfold eta_path_universe_uncurried.
+  simpl.
+Admitted.
+
+
+Definition cancel__ (C : Type) (D1 : s1 C) (v : s1_bound C)
+             (p : C = C) (pp : p = idpath) ( :
+   transport_s1' C (C; D1) p^ v @
+   ap D1 (ap (fun e : C = C => s1b_map (transport idmap e) v) (inv_V p) @
+   s1b_map_htpy_invariant (transport_path_universe_uncurried (equiv_path C C 1)) v) =
+   ap (fun e : C = C => transport s1 e^ D1 v) pp.
+
 
 
 
@@ -311,6 +361,9 @@ Definition transport_s1''_on_id `{Univalence}
                  transport_arrow _ _ _.
 *)
  
+
+
+
 
 
 (*** the rest is OK. todo: rewrite -> transport ***)
@@ -399,17 +452,6 @@ Proof.
 Qed.
 
 
-Definition transport_s2_bound `{Univalence}
-             (C : CT1) (D : CT1) (D2 : s2 D) (p1 : CT1_equiv C D) (a : s2_bound C) :
-               transport s2_bound ((CT1_equiv_is_path C D) p1) a =
-               s2b_map (CT1_equiv_to_morph p1) a.
-Proof.
-  revert p1. equiv_intro (CT1_equiv_is_path C D)^-1 p. induction p.
-  rewrite eisretr.
-  rewrite CT1_equiv_is_path_on_id.
-  destruct a.
-  reflexivity.
-Qed.
 
  
 Definition transport_s2 `{Univalence}
@@ -418,10 +460,11 @@ Definition transport_s2 `{Univalence}
     transport s2 (CT1_equiv_is_path C D p1)^ D.2 a =
     D.2 (s2b_map (CT1_equiv_to_morph p1) a).
 Proof.
-  rewrite transport_arrow. rewrite transport_const.
-  rewrite (inv_V _).
-  refine (ap D.2 _).
-  exact (transport_s2_bound C D.1 D.2 _ a).
+  destruct D as (D , D2). 
+  revert p1. equiv_intro (CT1_equiv_is_path C D)^-1 p. induction p.
+  rewrite eisretr.
+  rewrite CT1_equiv_is_path_on_id.
+  reflexivity.
 Qed.
 
 
@@ -869,3 +912,28 @@ Definition lemma'' `{Univalence}
 
 *)
 
+
+(*
+Definition transport_s2_bound `{Univalence}
+             (C : CT1) (D : CT1) (D2 : s2 D) (p1 : CT1_equiv C D) (a : s2_bound C) :
+               transport s2_bound ((CT1_equiv_is_path C D) p1) a =
+               s2b_map (CT1_equiv_to_morph p1) a.
+Proof.
+  revert p1. equiv_intro (CT1_equiv_is_path C D)^-1 p. induction p.
+  rewrite eisretr.
+  rewrite CT1_equiv_is_path_on_id.
+  destruct a.
+  reflexivity.
+Qed.
+*)
+
+
+
+
+(*
+Definition test0 (X Y : Type) (p : X = Y) (x : X) :
+             transport idmap p x =  equiv_path X Y p x.
+Proof.
+  reflexivity.
+Defined.
+*)
