@@ -244,26 +244,6 @@ Defined.
 *)
 
 
-Definition transport_s1_on_id `{Univalence}
-             (C : CT1) (v : s1_bound C) :
-               transport_s1 C C (equiv_path C.1 C.1 1) v =
-                 ap (fun e => transport s1 e^ C.2 v)
-                   (eta_path_universe_uncurried (idmap _)).
-Proof.
-  destruct C as (C0 , C1).
-  unfold transport_s1.
-  unfold equiv_ind. simpl.
-  unfold eta_path_universe_uncurried.
-Admitted.
-(*
-  generalize (path_universe_uncurried (equiv_path C.1 C.1 1)).
-  intro p.
-  induction p.
-  simpl.
-*)
-
-
-
 Definition transport_s1'
              (C : Type) (D : CT1) (p0 : D.1 = C) (v : s1_bound C) :
                transport s1 p0 D.2 v =
@@ -271,17 +251,6 @@ Definition transport_s1'
 Proof.
   by induction p0.
 Defined.
-
-
-Definition transport_s1'_
-             (C : Type) (D : CT1) (p0 : D.1 = C) (v : s1_bound C) :
-               transport s1 p0 D.2 v =
-               D.2 (s1b_map (equiv_path _ _ p0^) v).
-Proof.
-  rewrite transport_arrow.
-  rewrite transport_const.
-Admitted.
-
 
 
 
@@ -306,34 +275,17 @@ Defined.
 
 
 
-Definition transport_s1''_on_path `{Univalence}
-             (C : Type) (D : CT1) (p : C = D.1) (v : s1_bound C) :
-               transport_s1'' C D (equiv_path C D.1 p) v =
-               (ap (fun e => transport s1 e^ D.2 v) (eta_path_universe_uncurried p)) @
-               (transport_s1' C D p^ v) @
-               (ap (fun e => D.2 (s1b_map (equiv_path C D.1 e) v)) (inv_V p)).
-               (*
-                 ap (fun e => transport s1 e^ C.2 v)
-                   (eta_path_universe_uncurried (idmap _)).
-               *)
+Definition cancel__ (C : CT1) (v : s1_bound C)
+             (p : C.1 = C.1) (pp : p = idpath) :
+   transport_s1' C C p^ v @
+   ap C.2 (ap (fun e : C.1 = C.1 => s1b_map (transport idmap e) v) (inv_V p) @
+      s1b_map_htpy_invariant (fun v0 : C =>
+         apD10 (ap equiv_fun (ap (equiv_path C.1 C.1) pp)) v0) v) =
+   ap (fun e : C.1 = C.1 => transport s1 e^ C.2 v) pp.
 Proof.
-  destruct D as (D0 , D1). simpl in p. induction p.
-  simpl.
-  unfold transport_s1''.
-  simpl.
-  rewrite concat_p1. rewrite concat_p1.
-  unfold transport_idmap_path_universe_uncurried.
-  unfold eta_path_universe_uncurried.
-  simpl.
-Admitted.
-
-
-Definition cancel__ (C : Type) (D1 : s1 C) (v : s1_bound C)
-             (p : C = C) (pp : p = idpath) ( :
-   transport_s1' C (C; D1) p^ v @
-   ap D1 (ap (fun e : C = C => s1b_map (transport idmap e) v) (inv_V p) @
-   s1b_map_htpy_invariant (transport_path_universe_uncurried (equiv_path C C 1)) v) =
-   ap (fun e : C = C => transport s1 e^ D1 v) pp.
+  destruct C as (C0 , C1). rewrite <- (inv_V pp). induction pp^. simpl.
+  reflexivity.
+Qed.
 
 
 
@@ -346,10 +298,13 @@ Definition transport_s1''_on_id `{Univalence}
                    (eta_path_universe_uncurried (idmap _)).
 Proof.
   unfold transport_s1''.
-  unfold transport_path_universe_uncurried.
+  unfold transport_idmap_path_universe_uncurried.
   unfold eta_path_universe_uncurried.
   simpl.
-Admitted.
+  rewrite eisadj.
+  rewrite cancel__.
+  reflexivity.
+Qed.
 
 
 (*
@@ -936,4 +891,49 @@ Definition test0 (X Y : Type) (p : X = Y) (x : X) :
 Proof.
   reflexivity.
 Defined.
+*)
+
+(*
+
+
+Definition transport_s1_on_id `{Univalence}
+             (C : CT1) (v : s1_bound C) :
+               transport_s1 C C (equiv_path C.1 C.1 1) v =
+                 ap (fun e => transport s1 e^ C.2 v)
+                   (eta_path_universe_uncurried (idmap _)).
+Proof.
+  destruct C as (C0 , C1).
+  unfold transport_s1.
+  unfold equiv_ind. simpl.
+  unfold eta_path_universe_uncurried.
+Admitted.
+
+
+*)
+
+
+
+
+(*
+
+Definition transport_s1''_on_path `{Univalence}
+             (C : Type) (D : CT1) (p : C = D.1) (v : s1_bound C) :
+               transport_s1'' C D (equiv_path C D.1 p) v =
+               (ap (fun e => transport s1 e^ D.2 v) (eta_path_universe_uncurried p)) @
+               (transport_s1' C D p^ v) @
+               (ap (fun e => D.2 (s1b_map (equiv_path C D.1 e) v)) (inv_V p)).
+               (*
+                 ap (fun e => transport s1 e^ C.2 v)
+                   (eta_path_universe_uncurried (idmap _)).
+               *)
+Proof.
+  destruct D as (D0 , D1). simpl in p. induction p.
+  simpl.
+  unfold transport_s1''.
+  simpl.
+  rewrite concat_p1. rewrite concat_p1.
+  unfold transport_idmap_path_universe_uncurried.
+  unfold eta_path_universe_uncurried.
+  simpl.
+Admitted.
 *)
