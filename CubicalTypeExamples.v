@@ -3,76 +3,56 @@ Require Import CubicalType.
 
 
       
-(* true < false *)
-Inductive strictly_less : Bool -> Bool -> Type :=
-  | falsetrue : strictly_less false true.
 
-(*
-Definition strictly_less (a b : Bool) : Type :=
-  match a with
-    | false => match b with
-                 | true => Unit 
-                 | false => Empty
-               end
-    | true => Empty
-  end.
-*)
-
-(* not needed *)
-Inductive three : Type :=
-  | three0 : three
-  | three1 : three
-  | three2 : three.
-
-Inductive three_edges : three -> three -> Type :=
-  | three01 : three_edges three0 three1
-  | three12 : three_edges three1 three2.
- 
 (* examples *)
+
+(* true < false *)
+Inductive strictly_less : s1_bound Bool -> Type :=
+  | falsetrue : strictly_less (false, true).
 
 Definition interval_CT1 : CT1 :=
   ( Bool ; strictly_less ).
 
-(* not needed *)
-Definition long_interval_CT1 : CT1 :=
-  ( three ; three_edges ).
 
-Inductive squares {V : Type} (v00 : V) : forall (v01 v10 v11 : V),
-                  v00 = v01 -> v10 = v11 -> v00 = v10 -> v01 = v11 -> Type :=
-  | ids : squares v00 v00 v00 v00 idpath idpath idpath idpath.  
+Inductive pathsu {V : Type} : s1_bound V -> Type :=
+  | idp {v : V} : pathsu (v , v).
 
-Arguments ids {V v00}.
+Definition singular_CT1 (V : Type) : CT1 := (V ; pathsu).
 
+Inductive squares {V : Type} : s2_bound (singular_CT1 V) -> Type :=
+  | ids {v : V} : squares (@S2b (singular_CT1 V) v v v v idp idp idp idp).  
+  (* for some reason we cannot leave implicit the CT1 in the argument of S2b *)
 
-Inductive cubes {V : Type} (v000 : V) :
-                forall (v001 v010 v011 v100 v101 v110 v111 : V),
-                forall (a00x : v000 = v001), forall (a01x : v010 = v011), forall (a10x : v100 = v101), forall (a11x : v110 = v111),
-                forall (a0x0 : v000 = v010), forall (a0x1 : v001 = v011), forall (a1x0 : v100 = v110), forall (a1x1 : v101 = v111),
-                forall (ax00 : v000 = v100), forall (ax01 : v001 = v101), forall (ax10 : v010 = v110), forall (ax11 : v011 = v111),
-                forall (f0xx : squares _ _ _ _ a00x a01x a0x0 a0x1), forall (f1xx : squares _ _ _ _ a10x a11x a1x0 a1x1),
-                forall (fx0x : squares _ _ _ _ a00x a10x ax00 ax01), forall (fx1x : squares _ _ _ _ a01x a11x ax10 ax11),
-                forall (fxx0 : squares _ _ _ _ a0x0 a1x0 ax00 ax10), forall (fxx1 : squares _ _ _ _ a0x1 a1x1 ax01 ax11),
-                  Type :=
-  | idc : cubes v000 v000 v000 v000 v000 v000 v000 v000
-                idpath idpath idpath idpath idpath idpath idpath idpath idpath idpath idpath idpath
-                ids ids ids ids ids ids.
+Definition singular_CT2 (V : Type) : CT2 :=
+  (singular_CT1 V ; squares).
+
+Inductive cubes {V : Type} : s3_bound (singular_CT2 V) -> Type :=
+  | idc {v : V} : cubes (@S3b (singular_CT2 V) v v v v v v v v
+                idp idp idp idp idp idp idp idp idp idp idp idp
+                ids ids ids ids ids ids).
+
+Definition singular_CT3 (V : Type) : CT3 :=
+  (singular_CT2 V ; cubes).
 
 
+Definition map (V0V1 : Type * Type) : Type := fst V0V1 -> snd V0V1.
 
-Definition singular_CT1 (A : Type) : CT1 := (A ; paths).
-
-Definition singular_CT2 (A : Type) : CT2 :=
-  (A ; (paths ; squares)).
-
-Definition singular_CT3 (A : Type) : CT3 :=
-  (A ; (paths ; (squares ; cubes))).
+Definition universe_CT1 : CT1 :=
+  (Type ; map).
 
 
-Definition map (V0 V1 : Type) : Type := V0 -> V1.
-Definition commutative_square (V00 V01 V10 V11 : Type)
-                              (a0x : map V00 V01) (a1x : map V10 V11)
-                              (ax0 : map V00 V10) (ax1 : map V01 V11) :=
-  a1x o ax0 == ax1 o a0x.
+Definition commutative_square (b : s2_bound universe_CT1) : Type :=
+  b.(a1x) o b.(ax0) == b.(ax1) o b.(a0x).
+
+(* given a type we have the identity commutative square *)
+Definition id_commutative_square (T : Type) :
+             commutative_square (@S2b universe_CT1 T T T T idmap idmap idmap idmap) :=
+  fun x => idpath x.
+
+
+Definition universe_CT2 : CT2 :=
+  (universe_CT1 ; commutative_square).
+
 
 (*      -->
        ^   ^
@@ -80,14 +60,16 @@ Definition commutative_square (V00 V01 V10 V11 : Type)
     --> -->
 *)
 Definition comm_sq_l_wisk {V00 V01 V10 V11 : Type}
-                          {a0x : map V00 V01} {a1x : map V10 V11}
-                          {ax0 : map V00 V10} {ax1 : map V01 V11}
+                          {a0x : V00 -> V01} {a1x : V10 -> V11}
+                          {ax0 : V00 -> V10} {ax1 : V01 -> V11}
                           {T : Type} (f : T -> V00)
-                          (C : commutative_square _ _ _ _ a0x a1x ax0 ax1) :
-                            commutative_square T V01 V10 V11
+                          (C : commutative_square (@S2b universe_CT1
+                                                  _ _ _ _ a0x a1x ax0 ax1)) :
+                            commutative_square (@S2b universe_CT1 T V01 V10 V11
                                                (a0x o f) a1x
-                                               (ax0 o f) ax1 :=
+                                               (ax0 o f) ax1) :=
   fun x => C (f x).
+
 
 (*      --> -->
        ^   ^
@@ -95,28 +77,26 @@ Definition comm_sq_l_wisk {V00 V01 V10 V11 : Type}
         -->
 *)
 Definition comm_sq_r_wisk {V00 V01 V10 V11 : Type}
-                          {a0x : map V00 V01} {a1x : map V10 V11}
-                          {ax0 : map V00 V10} {ax1 : map V01 V11}
-                          (C : commutative_square _ _ _ _ a0x a1x ax0 ax1)
+                          {a0x : V00 -> V01} {a1x : V10 -> V11}
+                          {ax0 : V00 -> V10} {ax1 : V01 -> V11}
+                          (C : commutative_square (@S2b universe_CT1
+                                                  _ _ _ _ a0x a1x ax0 ax1))
                           {T : Type} (f : V11 -> T) :
-                            commutative_square V00 V01 V10 T
+                            commutative_square (@S2b universe_CT1
+                                               V00 V01 V10 T
                                                a0x (f o a1x)
-                                               ax0 (f o ax1) :=
+                                               ax0 (f o ax1)) :=
   fun x => ap f (C x).
 
 
-Definition commutative_cube
-             (v000 v001 v010 v011 v100 v101 v110 v111 : Type)
-             (a00x : map v000 v001) (a01x : map v010 v011) (a10x : map v100 v101) (a11x : map v110 v111)
-             (a0x0 : map v000 v010) (a0x1 : map v001 v011) (a1x0 : map v100 v110) (a1x1 : map v101 v111)
-             (ax00 : map v000 v100) (ax01 : map v001 v101) (ax10 : map v010 v110) (ax11 : map v011 v111)
-             (f0xx : commutative_square _ _ _ _ a00x a01x a0x0 a0x1) (f1xx : commutative_square _ _ _ _ a10x a11x a1x0 a1x1)
-             (fx0x : commutative_square _ _ _ _ a00x a10x ax00 ax01) (fx1x : commutative_square _ _ _ _ a01x a11x ax10 ax11)
-             (fxx0 : commutative_square _ _ _ _ a0x0 a1x0 ax00 ax10) (fxx1 : commutative_square _ _ _ _ a0x1 a1x1 ax01 ax11) :
-               Type :=
-  forall x : v000, 
-    (comm_sq_r_wisk fxx0 a11x x) @ (comm_sq_l_wisk a0x0 fx1x x) @ (comm_sq_r_wisk f0xx ax11 x) =
-    (comm_sq_l_wisk ax00 f1xx x) @ (comm_sq_r_wisk fx0x a1x1 x) @ (comm_sq_l_wisk a00x fxx1 x).
+Definition commutative_cube (b : s3_bound universe_CT2) : Type :=
+  forall x : b.(v000), 
+    (comm_sq_r_wisk b.(fxx0) b.(a11x) x) @
+    (comm_sq_l_wisk b.(a0x0) b.(fx1x) x) @
+    (comm_sq_r_wisk b.(f0xx) b.(ax11) x) =
+    (comm_sq_l_wisk b.(ax00) b.(f1xx) x) @
+    (comm_sq_r_wisk b.(fx0x) b.(a1x1) x) @
+    (comm_sq_l_wisk b.(a00x) b.(fxx1) x).
 
 (* maybe this is easier to understand?
 Proof.
@@ -135,43 +115,67 @@ Defined.
 *)
 
 
-Definition universe_CT1 : CT1 :=
-  (Type ; map).
-
-Definition universe_CT2 : CT2 :=
-  (Type ; (map ; commutative_square)).
-
 Definition universe_CT3 : CT3 :=
-  (Type ; (map ; (commutative_square ; commutative_cube))).
+  (universe_CT2 ; commutative_cube).
 
-
-
-(* given a type we have the identity commutative square *)
-Definition id_commutative_square (T : Type) : commutative_square T T T T idmap idmap idmap idmap :=
-  fun x => idpath x.
 
 
 (* given a map between types we have a vertically constant commutative square *)
 Definition vert_ct_commutative_square {S T : Type} (f : S -> T) :
-                                        commutative_square S S T T idmap idmap f f :=
+             commutative_square (@S2b universe_CT1 S S T T idmap idmap f f) :=
   fun x => idpath (f x).
 
 
 (* given a map between types we have a vertically constant commutative cube *)
 Definition vert_ct_commutative_cube {S T : Type} (f : S -> T) :
-             commutative_cube S S S S T T T T idmap idmap idmap idmap idmap idmap idmap idmap f f f f
-                              (id_commutative_square S) (id_commutative_square T)
-                              (vert_ct_commutative_square f) (vert_ct_commutative_square f)
-                              (vert_ct_commutative_square f) (vert_ct_commutative_square f) :=
+             commutative_cube (@S3b universe_CT2
+               S S S S T T T T idmap idmap idmap idmap idmap idmap idmap idmap f f f f
+               (id_commutative_square S) (id_commutative_square T)
+               (vert_ct_commutative_square f) (vert_ct_commutative_square f)
+               (vert_ct_commutative_square f) (vert_ct_commutative_square f)) :=
   fun x => idpath _.
 
 (* given two commutative squares [A, B] such that [A]'s right edge coincides with
    [B]'s left edge, we can compose them horizontally. *)
 Definition horiz_commutative_square_comp
              {V00 V01 V10 V11 V20 V21 : Type}
-             {a0x : map V00 V01} {a1x : map V10 V11} {a2x : map V20 V21}
-             {ax0 : map V00 V10} {ax1 : map V01 V11} {ax0' : map V10 V20} {ax1' : map V11 V21}
-             (S : commutative_square _ _ _ _ a0x a1x ax0 ax1)
-             (T : commutative_square _ _ _ _ a1x a2x ax0' ax1') :
-               commutative_square _ _ _ _ a0x a2x (ax0' o ax0) (ax1' o ax1) :=
+             {a0x : V00 -> V01} {a1x : V10 -> V11} {a2x : V20 -> V21}
+             {ax0 : V00 -> V10} {ax1 : V01 -> V11}
+             {ax0' : V10 -> V20} {ax1' : V11 -> V21}
+             (S : commutative_square (@S2b universe_CT2 _ _ _ _ a0x a1x ax0 ax1))
+             (T : commutative_square (@S2b universe_CT2 _ _ _ _ a1x a2x ax0' ax1')) :
+               commutative_square (@S2b universe_CT2 _ _ _ _
+                                        a0x a2x (ax0' o ax0) (ax1' o ax1)) :=
   fun x => (T (ax0 x)) @ (ap ax1' (S x)).
+
+
+
+
+
+
+
+(* not needed *)
+(*
+Definition strictly_less (a b : Bool) : Type :=
+  match a with
+    | false => match b with
+                 | true => Unit 
+                 | false => Empty
+               end
+    | true => Empty
+  end.
+*)
+
+Inductive three : Type :=
+  | three0 : three
+  | three1 : three
+  | three2 : three.
+
+Inductive three_edges : three * three -> Type :=
+  | three01 : three_edges (three0,three1)
+  | three12 : three_edges (three1,three2).
+ 
+(* not needed *)
+Definition long_interval_CT1 : CT1 :=
+  ( three ; three_edges ).
+
