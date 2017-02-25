@@ -328,7 +328,6 @@ Definition flip2_involutive' :
 
 
   (* we now want to show that [i o a] has a left inverse: [j o flip2(f1(f1)) o i^-1] *)
-  (* todo: don't use rewrite *)
   (* maybe give a name to [j o flip2(f1(f1)) o i^-1] ? *)
 Definition prod11_twocells_fl :
                  (prod11_twocells_map_from _)
@@ -336,14 +335,14 @@ Definition prod11_twocells_fl :
                o (prod11_twocells_map_from b) == idmap.
 Proof.
   intro x.
-  unfold prod11_twocells_map_from.
-  simpl.
+  unfold prod11_twocells_map_from. simpl.
   rewrite (transport_Vp idmap (path_i b) _).
   apply flip2_involutive'.
 Qed.
   (* todo: rewrite *)
 
 End ioaInverse.
+
 
 
   (* [i o a] is an equivalence, but we really contruct its inverse *)
@@ -361,7 +360,7 @@ Proof.
 Defined.
 
 
-(* the product of 1-CT is "commutative" *)
+(* the product of 1-CT is anti-commutative *)
 Definition prod11_commute `{Univalence}
              (C D : CT1) : CT1_product C D = CT2_opposite_2 (CT1_product D C).
 Proof.
