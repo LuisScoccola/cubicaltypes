@@ -200,15 +200,26 @@ Section Morphisms.
  
 
   (*
-  Definition s2b_map_htpy_invariant {C D : CT1}
+  Definition s2b_map_htpy_invariant `{Funext} {C D : CT1}
                {M N : CT1_morph C D} (h : CT1_morph_homotopy M N) :
                  s2b_map M == s2b_map N.
   Proof. 
+    destruct M as (M0 , M1). destruct N as (N0 , N1).
+    destruct h as (h0 , h1). simpl in h1.
+    pose (h0p := path_arrow _ _ h0).
+    simpl in h0p.
     intro b.
-    destruct h as (h0 , h1).
+    induction (s1b_map_htpy_invariant h0 b)^.
+    unfold s1b_map_htpy_invariant in h1.
+    induction h0p.
+    pose (h1p' := fun v => path_arrow _ _ (h1 v)).
+    pose (h1p := path_forall _ _ h1p').
+    intro b.
     destruct b.
     unfold s2b_map.
     simpl.
+    induction h1p.
+    induction h0.
     rewrite (h0 v02).
     fun v => let (v0, v1) := v in
                  (path_prod (M0 v0, M0 v1) (N0 v0, N0 v1) (h v0) (h v1)).
@@ -218,9 +229,29 @@ Section Morphisms.
   Definition s2_morph (C D : CT2) (p1 : CT1_morph C.1 D.1) : Type :=
     forall a : s2_bound C,
       C.2 a -> D.2 ((s2b_map p1) a).
+    
+
+  Definition CT2_morph (C D : CT2) : Type :=
+    { p1 : CT1_morph C D & s2_morph C D p1}.
   
-  
-    (* todo: same for CT3 *)
+
+  Definition s3b_map {C D : CT2} (M : CT2_morph C D)
+               (a : s3_bound C) : s3_bound D :=
+    S3b (M.1.1 a.(v000)) (M.1.1 a.(v001)) (M.1.1 a.(v010)) (M.1.1 a.(v011))
+        (M.1.1 a.(v100)) (M.1.1 a.(v101)) (M.1.1 a.(v110)) (M.1.1 a.(v111))
+        (M.1.2 _ a.(a00x)) (M.1.2 _ a.(a01x)) (M.1.2 _ a.(a10x)) (M.1.2 _ a.(a11x))
+        (M.1.2 _ a.(a0x0)) (M.1.2 _ a.(a0x1)) (M.1.2 _ a.(a1x0)) (M.1.2 _ a.(a1x1))
+        (M.1.2 _ a.(ax00)) (M.1.2 _ a.(ax01)) (M.1.2 _ a.(ax10)) (M.1.2 _ a.(ax11))
+        (M.2 _ a.(f0xx)) (M.2 _ a.(f1xx)) (M.2 _ a.(fx0x))
+        (M.2 _ a.(fx1x)) (M.2 _ a.(fxx0)) (M.2 _ a.(fxx1)).
+
+  Definition s3_morph (C D : CT3) (p2 : CT2_morph C.1 D.1) : Type :=
+    forall a : s3_bound C,
+      C.2 a -> D.2 ((s3b_map p2) a).
+ 
+  Definition CT3_morph (C D : CT3) : Type :=
+    { p2 : CT2_morph C D & s3_morph C D p2}.
+
 
 End Morphisms.
  
@@ -250,10 +281,6 @@ Section IdentityTypes.
     forall a : s2_bound C,
       C.2 a <~> D.2 ((s2b_map (CT1_equiv_to_morph p1)) a).
     (* for some reason we have to coerce manually there *)
-   
-
-  Definition CT2_morph (C D : CT2) : Type :=
-    { p1 : CT1_morph C D & s2_morph C D p1}.
   
   Definition CT2_equiv (C D : CT2) : Type :=
     { p1 : CT1_equiv C D & s2_equiv C D p1}.
