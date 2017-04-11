@@ -108,7 +108,7 @@ Proof.
   exact (ct1_nat C H N).
 *)
 
-(* underlying morphism *)
+(* underlying morphism, not needed *)
 Definition underlying_morphism_nt2 {C : CT2} {H : CT3}
                                    {fg :  CT2_morph C H * CT2_morph C H}
                                    (N : CT2_naturalt C H fg) :
@@ -116,6 +116,42 @@ Definition underlying_morphism_nt2 {C : CT2} {H : CT3}
   match N with
     | ct2_nat N' => N'
   end.
+
+
+Definition component_arrows_nt2 {C : CT2} {H : CT3}
+                                {fg : CT2_morph C H * CT2_morph C H}
+                                (N : CT2_naturalt C H fg) (c : C.1.1) :
+                                  H.1.1.2 (((fst fg).1.1 c), ((snd fg).1.1 c)) :=
+  match N with
+    | ct2_nat NN => NN.1.1.2 _ (@edge_vert interval_CT1 C _ _ falsetrue c)
+  end.
+
+Definition component_squares_nt2 {C : CT2} {H : CT3}
+             {fg : CT2_morph C H * CT2_morph C H}
+             (N : CT2_naturalt C H fg) {v : s1_bound C.1.1} (a : C.1.2 v) :
+               H.1.2 (@S2b H.1.1 _ _ _ _ ((fst fg).1.2 _ a) ((snd fg).1.2 _ a)
+                                     (component_arrows_nt2 N (fst v))
+                                     (component_arrows_nt2 N (snd v))) :=
+  match N with
+    | ct2_nat NN => NN.1.2 _ (@mixsquare12 interval_CT1 C _ _ falsetrue _ _ a)
+  end.
+
+
+Definition component_cubes_nt2 {C : CT2} {H : CT3}
+             {fg : CT2_morph C H * CT2_morph C H}
+             (N : CT2_naturalt C H fg) {s : s2_bound C} (f : C.2 s) :
+               H.2 (@S3b H _ _ _ _ _ _ _ _
+                             _ _ _ _ _ _ _ _ _ _ _ _
+                             ((fst fg).2 _ f) ((snd fg).2 _ f)
+                             (component_squares_nt2 N s.(a0x))
+                             (component_squares_nt2 N s.(a1x))
+                             (component_squares_nt2 N s.(ax0))
+                             (component_squares_nt2 N s.(ax1))) :=
+  match N with
+    | ct2_nat NN => NN.2 _ (@cube12 interval_CT1 C _ _ falsetrue _ _ _ _ _ _ _ _ f)
+  end.
+
+
 
 
 (* [H^C] *)

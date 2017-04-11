@@ -120,6 +120,7 @@ Definition universe_CT3 : CT3 :=
 
 
 
+
 (* given a map between types we have a vertically constant commutative square *)
 Definition vert_ct_commutative_square {S T : Type} (f : S -> T) :
              commutative_square (@S2b universe_CT1 S S T T idmap idmap f f) :=
@@ -135,6 +136,31 @@ Definition vert_ct_commutative_cube {S T : Type} (f : S -> T) :
                (vert_ct_commutative_square f) (vert_ct_commutative_square f)) :=
   fun x => idpath _.
 
+
+(* given commutative squares that can be composed by a vertex, we have two homotopies between the
+   lower composition and the upper composition. These homotopies are homotopical. *)
+Definition commutative_square_vertex_comp_coherence
+             {V00 V01 V10 V11 V12 V21 V22 : Type}
+             {a0x : V00 -> V01} {a1x : V10 -> V11}
+             {ax0 : V00 -> V10} {ax1 : V01 -> V11}
+             {a0x' : V11 -> V12} {a1x' : V21 -> V22}
+             {ax0' : V11 -> V21} {ax1' : V12 -> V22}
+             (S : commutative_square (@S2b universe_CT2 _ _ _ _ a0x a1x ax0 ax1))
+             (T : commutative_square (@S2b universe_CT2 _ _ _ _ a0x' a1x' ax0' ax1')) :
+  forall x : V00, 
+    (comm_sq_r_wisk S (a1x' o ax0') x) @ (comm_sq_l_wisk (ax1 o a0x) T x) =
+    (comm_sq_l_wisk (a1x o ax0) T x) @ (comm_sq_r_wisk S (ax1' o a0x') x).
+Proof.
+  intro x.
+  pose (t0 := apD T (S x)). simpl in t0.
+  pose (t1 := (transport_paths_FlFr _ _)^ @ t0).
+  pose (t2 := (concat_pp_p _ _ _)^ @ t1).
+  apply moveL_Mp in t2.
+  exact t2^.
+Defined.
+  
+
+
 (* given two commutative squares [A, B] such that [A]'s right edge coincides with
    [B]'s left edge, we can compose them horizontally. *)
 Definition horiz_commutative_square_comp
@@ -148,9 +174,80 @@ Definition horiz_commutative_square_comp
                                         a0x a2x (ax0' o ax0) (ax1' o ax1)) :=
   fun x => (T (ax0 x)) @ (ap ax1' (S x)).
 
+(* the same idea as above but for cubes. *)
+Definition horiz_commutative_cube_comp
+             {V000 V001 V010 V011 V100 V101 V110 V111 V200 V201 V210 V211 : Type}
+             {a00x : V000 -> V001} {a01x : V010 -> V011}
+             {a10x : V100 -> V101} {a11x : V110 -> V111}
+             {a20x : V200 -> V201} {a21x : V210 -> V211}
+             {a0x0 : V000 -> V010} {a0x1 : V001 -> V011}
+             {a1x0 : V100 -> V110} {a1x1 : V101 -> V111}
+             {a2x0 : V200 -> V210} {a2x1 : V201 -> V211}
+             {ax00 : V000 -> V100} {ax01 : V001 -> V101}
+             {ax10 : V010 -> V110} {ax11 : V011 -> V111}
+             {ax00' : V100 -> V200} {ax01' : V101 -> V201}
+             {ax10' : V110 -> V210} {ax11' : V111 -> V211}
+             {f0xx : commutative_square (@S2b universe_CT3 _ _ _ _ a00x a01x a0x0 a0x1)}
+             {f1xx : commutative_square (@S2b universe_CT3 _ _ _ _ a10x a11x a1x0 a1x1)}
+             {fx0x : commutative_square (@S2b universe_CT3 _ _ _ _ a00x a10x ax00 ax01)}
+             {fx1x : commutative_square (@S2b universe_CT3 _ _ _ _ a01x a11x ax10 ax11)}
+             {fxx0 : commutative_square (@S2b universe_CT3 _ _ _ _ a0x0 a1x0 ax00 ax10)}
+             {fxx1 : commutative_square (@S2b universe_CT3 _ _ _ _ a0x1 a1x1 ax01 ax11)}
+             {fx0x' : commutative_square (@S2b universe_CT3 _ _ _ _ a10x a20x ax00' ax01')}
+             {fx1x' : commutative_square (@S2b universe_CT3 _ _ _ _ a11x a21x ax10' ax11')}
+             {fxx0' : commutative_square (@S2b universe_CT3 _ _ _ _ a1x0 a2x0 ax00' ax10')}
+             {fxx1' : commutative_square (@S2b universe_CT3 _ _ _ _ a1x1 a2x1 ax01' ax11')}
+             {f2xx : commutative_square (@S2b universe_CT3 _ _ _ _ a20x a21x a2x0 a2x1)}
+             (S : commutative_cube (@S3b universe_CT3 _ _ _ _ _ _ _ _
+                                                      _ _ _ _ _ _ _ _ _ _ _ _
+                                                      f0xx f1xx fx0x fx1x fxx0 fxx1))
+             (T : commutative_cube (@S3b universe_CT2 _ _ _ _ _ _ _ _
+                                                      _ _ _ _ _ _ _ _ _ _ _ _
+                                                      f1xx f2xx fx0x' fx1x' fxx0' fxx1')) :
+               commutative_cube (@S3b universe_CT3 _ _ _ _ _ _ _ _
+                                                   _ _ _ _ _ _ _ _ _ _ _ _
+                                                   f0xx f2xx
+                                                   (horiz_commutative_square_comp fx0x fx0x')
+                                                   (horiz_commutative_square_comp fx1x fx1x')
+                                                   (horiz_commutative_square_comp fxx0 fxx0')
+                                                   (horiz_commutative_square_comp fxx1 fxx1')).
+Proof.
+  intro x.
+  unfold commutative_cube in *. unfold horiz_commutative_square_comp in *.
+  unfold comm_sq_r_wisk in *. unfold comm_sq_l_wisk in *. simpl in *.
+
+  rewrite ap_pp. rewrite ap_pp.
+  rewrite <- ap_compose.
+  rewrite concat_p_pp.
+  rewrite (concat_pp_p (ap a21x (fxx0' (ax00 x))) _ _).
+    (* the non-trivial part *)
+  rewrite (commutative_square_vertex_comp_coherence fxx0 fx1x' x).
+
+  unfold comm_sq_r_wisk. unfold comm_sq_l_wisk. simpl.
+  rewrite (ap_compose a11x ax11'). rewrite (ap_compose ax11 ax11').
+  do 3 rewrite concat_pp_p.
+  do 2 rewrite <- ap_pp.
+  rewrite (concat_p_pp (ap a11x (fxx0 x)) _ _).
+    (* the non-trivial part *)
+  rewrite S.
+
+  do 2 rewrite ap_pp.
+  do 3 rewrite concat_p_pp.
+    (* the non-trivial part *)
+  rewrite T.
+
+  do 2 rewrite concat_pp_p.
+  rewrite (concat_p_pp (fxx1' (a10x (ax00 x))) _ _).
+  rewrite <- ap_compose.
+    (* the non-trivial part *)
+  rewrite <- (commutative_square_vertex_comp_coherence fx0x fxx1' x).
 
 
-
+  unfold comm_sq_r_wisk. unfold comm_sq_l_wisk. simpl.
+  rewrite <- ap_compose.
+  do 4 rewrite concat_pp_p.
+  reflexivity.
+Qed.
 
 
 

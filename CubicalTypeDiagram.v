@@ -242,11 +242,7 @@ Definition CT2_const_diagram_morph (C : CT2) {S T : Type} (f : S -> T) :
 
 (* composition of diagram morphisms *)
 
-  (* given two composable natural transformations (which can be seen
-     as diagrams over [I x C]) we want to construct a diagram over
-     [lI x C], where [lI] is the long interval
-   *)
-
+  (* 1 *)
 Definition CT1_diagram_morph_comp0 {C : CT1} {D E F : CT1_diagram C}
              (f : CT1_diagram_morph (D,E)) (g : CT1_diagram_morph (E,F))
              (x : (CT1_product interval_CT1 C).1) : Type :=
@@ -255,6 +251,7 @@ Definition CT1_diagram_morph_comp0 {C : CT1} {D E F : CT1_diagram C}
     | false => D.1 xc
     | true => F.1 xc
   end.
+
 
 Definition CT1_diagram_morph_comp1 {C : CT1} {D E F : CT1_diagram C}
              (f : CT1_diagram_morph (D,E)) (g : CT1_diagram_morph (E,F)) :
@@ -304,6 +301,99 @@ Definition CT1_diagram_morph_comp {C : CT1} {D E F : CT1_diagram C}
   ct1_nat _ _ (CT1_diagram_morph_comp2 f g).
  
  
+  (* 2 *)
+Definition CT2_diagram_morph_comp0 {C : CT2} {D E F : CT2_diagram C}
+             (f : CT2_diagram_morph (D,E)) (g : CT2_diagram_morph (E,F))
+             (x : (CT12_product interval_CT1 C).1) : Type :=
+  let (xi, xc) := x in
+  match xi with
+    | false => D.1.1 xc
+    | true => F.1.1 xc
+  end.
+
+Definition CT2_diagram_morph_comp1 {C : CT2} {D E F : CT2_diagram C}
+             (f : CT2_diagram_morph (D,E)) (g : CT2_diagram_morph (E,F)) :
+               CT1_morph (CT12_product interval_CT1 C)
+                         universe_CT3.
+Proof.
+  exists (CT2_diagram_morph_comp0 f g).
+  intros xy X.
+  induction X.
+    - cut ((fun x => map (s1b_map (CT2_diagram_morph_comp0 f g)
+                        (fst x, j, (snd x, j)))) (i0, i1)).
+      + exact idmap.
+      + induction ai.
+        exact ((component_arrows_nt2 g j) o (component_arrows_nt2 f j)).
+    - simple refine (match i with
+               | false => _ (* D.2 _ aj*)
+               | true => _ (* F.2 _ aj*)
+             end).
+        + simpl. exact (F.1.2 _ aj).
+        + simpl. exact (D.1.2 _ aj).
+Defined.
+
+
+Definition CT2_diagram_morph_comp2 {C : CT2} {D E F : CT2_diagram C}
+             (f : CT2_diagram_morph (D,E)) (g : CT2_diagram_morph (E,F)) :
+               CT2_morph (CT12_product interval_CT1 C)
+                         universe_CT3.
+Proof.
+  exists (CT2_diagram_morph_comp1 f g).
+  intros b c.
+  induction c.
+    - simple refine ( match c with
+                        | false => _ (* D.2 _ f0*)
+                        | true => _ (* F.2 _ f0*)
+                      end ).
+      + exact (F.2 _ f0).
+      + exact (D.2 _ f0).
+    - cut ((fun x y => universe_CT2.2 (s2b_map (CT2_diagram_morph_comp1 f g)
+              (@S2b (CT12_product interval_CT1 C)
+                    (fst x, j0) (fst x, j1) (snd x, j0) (snd x, j1)
+                    (vert_edge (fst x) aj) (vert_edge (snd x) aj)
+                    (edge_vert y j0) (edge_vert y j1) ))) (i0, i1) ai).
+      + exact idmap.
+      + induction ai.
+        exact (horiz_commutative_square_comp (component_squares_nt2 f aj)
+                                             (component_squares_nt2 g aj)).
+Defined.
+
+
+Definition CT2_diagram_morph_comp3 {C : CT2} {D E F : CT2_diagram C}
+             (f : CT2_diagram_morph (D,E)) (g : CT2_diagram_morph (E,F)) :
+               CT3_morph (CT12_product interval_CT1 C)
+                         universe_CT3.
+Proof.
+  exists (CT2_diagram_morph_comp2 f g).
+  intros b c.
+  induction c.
+  cut ((fun x y => universe_CT3.2 (s3b_map (CT2_diagram_morph_comp2 f g)
+        (@S3b (CT12_product interval_CT1 C)
+        (fst x, v00) (fst x, v01) (fst x, v10) (fst x, v11)
+        (snd x, v00) (snd x, v01) (snd x, v10) (snd x, v11)
+        (vert_edge (fst x) a0x) (vert_edge (fst x) a1x)
+        (vert_edge (snd x) a0x) (vert_edge (snd x) a1x)
+        (vert_edge (fst x) ax0) (vert_edge (fst x) ax1)
+        (vert_edge (snd x) ax0) (vert_edge (snd x) ax1)
+        (edge_vert y v00) (edge_vert y v01)
+        (edge_vert y v10) (edge_vert y v11)
+        (homsquare12 (fst x) f0) (homsquare12 (snd x) f0)
+        (mixsquare12 y a0x) (mixsquare12 y a1x)
+        (mixsquare12 y ax0) (mixsquare12 y ax1)))) (c0, c1) cx).
+    - exact idmap.
+    - induction cx. simpl.
+      exact (horiz_commutative_cube_comp (component_cubes_nt2 f f0)
+                                         (component_cubes_nt2 g f0)).
+Defined.
+
+
+Definition CT2_diagram_morph_comp {C : CT2} {D E F : CT2_diagram C}
+             (f : CT2_diagram_morph (D,E)) (g : CT2_diagram_morph (E,F)) :
+               CT2_diagram_morph (D,F) :=
+  ct2_nat _ _ (CT2_diagram_morph_comp3 f g).
+ 
+
+
 
 (* cones *)
 Definition cone1 {C : CT1} (D : CT1_diagram C) (d : Type) :=
@@ -319,3 +409,21 @@ Definition induced_cone1 {C : CT1}
            (D : CT1_diagram C) (d : Type)
            (cd : cone1 D d) (d' : Type) (f : d -> d') : cone1 D d' :=
   CT1_diagram_morph_comp cd (CT1_const_diagram_morph C f).
+
+Definition is_universal_cone1 {C : CT1}
+           {D : CT1_diagram C} {d : Type}
+           (cd : cone1 D d) : Type :=
+             forall d' : Type,
+               IsEquiv (induced_cone1 D d cd d').
+
+
+Definition induced_cone2 {C : CT2}
+           (D : CT2_diagram C) (d : Type)
+           (cd : cone2 D d) (d' : Type) (f : d -> d') : cone2 D d' :=
+  CT2_diagram_morph_comp cd (CT2_const_diagram_morph C f).
+
+Definition is_universal_cone2 {C : CT2}
+           {D : CT2_diagram C} {d : Type}
+           (cd : cone2 D d) : Type :=
+             forall d' : Type,
+               IsEquiv (induced_cone2 D d cd d').
