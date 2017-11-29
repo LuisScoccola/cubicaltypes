@@ -126,6 +126,13 @@ Definition vert_ct_commutative_square {S T : Type} (f : S -> T) :
              commutative_square (@S2b universe_CT1 S S T T idmap idmap f f) :=
   fun x => idpath (f x).
 
+(* the horizontal version *)
+Definition horiz_ct_commutative_square {S T : Type} (f : S -> T) :
+             commutative_square (@S2b universe_CT1 S T S T f f idmap idmap) :=
+  fun x => idpath (f x).
+
+
+
 
 (* given a map between types we have a vertically constant commutative cube *)
 Definition vert_ct_commutative_cube {S T : Type} (f : S -> T) :
@@ -135,6 +142,47 @@ Definition vert_ct_commutative_cube {S T : Type} (f : S -> T) :
                (vert_ct_commutative_square f) (vert_ct_commutative_square f)
                (vert_ct_commutative_square f) (vert_ct_commutative_square f)) :=
   fun x => idpath _.
+
+Definition vert_ct_commutative_cube' {V00 V01 V10 V11 : Type}
+                          {a0x : V00 -> V01} {a1x : V10 -> V11}
+                          {ax0 : V00 -> V10} {ax1 : V01 -> V11}
+                          (C : commutative_square (@S2b universe_CT1
+                                                  _ _ _ _ a0x a1x ax0 ax1)) :
+             commutative_cube (@S3b universe_CT2
+               _ _ _ _ _ _ _ _ a0x a1x a0x a1x ax0 ax1 ax0 ax1 idmap idmap idmap idmap
+               C C
+               (vert_ct_commutative_square a0x) (vert_ct_commutative_square a1x)
+               (vert_ct_commutative_square ax0) (vert_ct_commutative_square ax1)).
+Proof.
+  intro x. simpl.
+  refine (concat_1p _ @ _).
+  refine (ap_idmap _ @ _).
+  refine (_ @ (concat_p1 _)^).
+  apply (concat_p1 _)^.
+Defined.
+
+Definition vert_ct_commutative_cube'' {V00 V01 V10 V11 : Type}
+                          {a0x : V00 -> V01} {a1x : V10 -> V11}
+                          {ax0 : V00 -> V10} {ax1 : V01 -> V11}
+                          (C : commutative_square (@S2b universe_CT1
+                                                  _ _ _ _ a0x a1x ax0 ax1)) :
+             commutative_cube (@S3b universe_CT2
+               _ _ _ _ _ _ _ _ a0x a0x a1x a1x idmap idmap idmap idmap ax0 ax1 ax0 ax1 
+               (vert_ct_commutative_square a0x) (vert_ct_commutative_square a1x)
+               C C
+               (vert_ct_commutative_square ax0) (vert_ct_commutative_square ax1)).
+Proof.
+  intro x. simpl. 
+  unfold comm_sq_l_wisk. unfold comm_sq_r_wisk.
+  unfold vert_ct_commutative_square. simpl.
+  refine (concat_p1 _ @ _).
+  refine (concat_1p _ @ _).
+  refine (_ @ (concat_p1 _)^).
+  refine (_ @ (concat_1p _)^).
+  apply (ap_idmap _)^.
+Defined.
+
+
 
 
 (* given commutative squares that can be composed by a vertex, we have two homotopies between the

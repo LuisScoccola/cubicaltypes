@@ -339,7 +339,7 @@ Proof.
   rewrite (transport_Vp idmap (path_i b) _).
   apply flip2_involutive'.
 Qed.
-  (* todo: rewrite *)
+  (* todo: get rid of rewrite *)
 
 End ioaInverse.
 
