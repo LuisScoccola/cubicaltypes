@@ -1,5 +1,7 @@
 # cubicaltypes
 
+A library to talk about 1-coherent and 2-coherent diagrams and their (co)limits in Homotopy Type Theory.
+
 ### CubicalType.v
 
 - Definition of 1,2,3-semicubical types (cubical type or CT).
